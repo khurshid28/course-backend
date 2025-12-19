@@ -1,0 +1,402 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Region {
+  TOSHKENT_SHAHAR
+  TOSHKENT_VILOYATI
+  ANDIJON
+  BUXORO
+  FARGONA
+  JIZZAX
+  XORAZM
+  NAMANGAN
+  NAVOIY
+  QASHQADARYO
+  QORAQALPOGISTON
+  SAMARQAND
+  SIRDARYO
+  SURXONDARYO
+}
+
+enum PaymentMethod {
+  CLICK
+  PAYME
+  UZUM
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  phone           String           @unique @db.VarChar(13)
+  email           String?          @unique @db.VarChar(255)
+  firstName       String?          @db.VarChar(100)
+  surname         String?          @db.VarChar(100)
+  avatar          String?          @db.VarChar(500)
+  gender          Gender?
+  region          Region?
+  isVerified      Boolean          @default(false)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  verificationCodes VerificationCode[]
+  enrollments       Enrollment[]
+  feedbacks         Feedback[]
+  savedCourses      SavedCourse[]
+  payments          Payment[]
+  comments          CourseComment[]
+  testResults       TestResult[]
+  certificates      Certificate[]
+  teacher           Teacher?
+  notifications     Notification[]
+
+  @@index([phone])
+  @@index([email])
+}
+
+model VerificationCode {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  code        String   @db.VarChar(6)
+  expiresAt   DateTime
+  isUsed      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+}
+
+model Teacher {
+  id          Int       @id @default(autoincrement())
+  userId      Int?      @unique
+  name        String    @db.VarChar(255)
+  bio         String?   @db.Text
+  email       String?   @unique @db.VarChar(255)
+  phone       String?   @db.VarChar(13)
+  avatar      String?   @db.VarChar(500)
+  rating      Float     @default(0)
+  totalRatings Int      @default(0)
+  categories  String?   @db.VarChar(500)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  courses     Course[]
+
+  @@index([email])
+  @@index([userId])
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(100)
+  nameUz      String    @db.VarChar(100)
+  icon        String?   @db.VarChar(500)
+  image       String?   @db.VarChar(500)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  
+  courses     Course[]
+
+  @@index([name])
+}
+
+model Course {
+  id              Int           @id @default(autoincrement())
+  teacherId       Int
+  categoryId      Int
+  title           String        @db.VarChar(255)
+  subtitle        String?       @db.VarChar(500)
+  description     String?       @db.Text
+  thumbnail       String?       @db.VarChar(500)
+  price           Decimal       @db.Decimal(10, 2) @default(0)
+  isFree          Boolean       @default(false)
+  freeVideosCount Int           @default(0)
+  duration        Int?          // in minutes
+  level           String?       @db.VarChar(50)
+  hasCertificate  Boolean       @default(true)
+  rating          Decimal       @db.Decimal(3, 2) @default(0)
+  totalStudents   Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  teacher         Teacher       @relation(fields: [teacherId], references: [id])
+  category        Category      @relation(fields: [categoryId], references: [id])
+  sections        Section[]
+  videos          Video[]
+  enrollments     Enrollment[]
+  feedbacks       Feedback[]
+  savedCourses    SavedCourse[]
+  comments        CourseComment[]
+  faqs            CourseFAQ[]
+  banners         Banner[]
+  tests           Test[]
+
+  @@index([teacherId])
+  @@index([categoryId])
+  @@index([title])
+}
+
+model Section {
+  id          Int       @id @default(autoincrement())
+  courseId    Int
+  title       String    @db.VarChar(255)
+  description String?   @db.Text
+  order       Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  videos      Video[]
+
+  @@index([courseId])
+  @@index([order])
+}
+
+model Video {
+  id          Int       @id @default(autoincrement())
+  courseId    Int
+  sectionId   Int?
+  title       String    @db.VarChar(255)
+  subtitle    String?   @db.VarChar(500)
+  description String?   @db.Text
+  url         String    @db.VarChar(500)
+  thumbnail   String?   @db.VarChar(500)
+  duration    Int?      // in seconds
+  order       Int       @default(0)
+  isFree      Boolean   @default(false)
+  screenshots String?   @db.Text // JSON array of screenshot URLs
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  section     Section?  @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@index([courseId])
+  @@index([sectionId])
+  @@index([order])
+}
+
+model Test {
+  id              Int           @id @default(autoincrement())
+  courseId        Int
+  title           String        @db.VarChar(255)
+  description     String?       @db.Text
+  duration        Int           // in minutes (timer)
+  passingScore    Int           @default(70) // percentage
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  course          Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions       TestQuestion[]
+  results         TestResult[]
+
+  @@index([courseId])
+}
+
+model TestQuestion {
+  id          Int       @id @default(autoincrement())
+  testId      Int
+  question    String    @db.Text
+  options     String    @db.Text // JSON array of options
+  correctAnswer Int     // index of correct option
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  
+  test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+}
+
+model TestResult {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  testId      Int
+  score       Int       // percentage
+  answers     String    @db.Text // JSON array of user answers
+  isPassed    Boolean   @default(false)
+  completedAt DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  certificate Certificate?
+
+  @@index([userId])
+  @@index([testId])
+}
+
+model Certificate {
+  id            Int        @id @default(autoincrement())
+  userId        Int
+  courseId      Int?
+  testResultId  Int        @unique
+  certificateNo String     @unique @db.VarChar(100)
+  issuedAt      DateTime   @default(now())
+  
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testResult    TestResult @relation(fields: [testResultId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([certificateNo])
+}
+
+model CourseFAQ {
+  id          Int       @id @default(autoincrement())
+  courseId    Int
+  question    String    @db.Text
+  answer      String    @db.Text
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
+
+model CourseComment {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  courseId    Int
+  comment     String    @db.Text
+  rating      Int?      // 1-5
+  screenshots String?   @db.Text // JSON array of screenshot URLs
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([createdAt])
+}
+
+model Enrollment {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  courseId    Int
+  isActive    Boolean   @default(true)
+  enrolledAt  DateTime  @default(now())
+  expiresAt   DateTime?
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
+model Feedback {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  courseId    Int
+  rating      Int       @db.TinyInt // 1-5
+  comment     String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([rating])
+}
+
+model SavedCourse {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  courseId    Int
+  savedAt     DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
+model Banner {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar(255)
+  description String?   @db.Text
+  image       String    @db.VarChar(500)
+  courseId    Int?
+  link        String?   @db.VarChar(500)
+  isActive    Boolean   @default(true)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  course      Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([isActive])
+  @@index([courseId])
+}
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  title       String    @db.VarChar(255)
+  message     String    @db.Text
+  type        String    @db.VarChar(50) // 'course', 'discount', 'certificate', 'video'
+  icon        String?   @db.VarChar(100)
+  link        String?   @db.VarChar(500)
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model Payment {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  courseId        Int
+  amount          Decimal       @db.Decimal(10, 2)
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  transactionId   String?       @unique @db.VarChar(255)
+  paymentDate     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  user            User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([transactionId])
+  @@index([status])
+}
