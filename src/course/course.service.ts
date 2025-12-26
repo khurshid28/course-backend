@@ -180,6 +180,28 @@ export class CourseService {
     return saved.map((s) => s.course);
   }
 
+  async getEnrolledCourses(userId: number) {
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { userId },
+      include: {
+        course: {
+          include: {
+            teacher: true,
+            category: true,
+          },
+        },
+      },
+      orderBy: { enrolledAt: 'desc' },
+    });
+
+    return enrollments.map((e) => ({
+      ...e.course,
+      enrolledAt: e.enrolledAt,
+      expiresAt: e.expiresAt,
+      isExpired: e.expiresAt ? new Date() > new Date(e.expiresAt) : false,
+    }));
+  }
+
   async addFeedback(userId: number, courseId: number, dto: CreateFeedbackDto) {
     const course = await this.prisma.course.findUnique({ where: { id: courseId } });
     if (!course) {

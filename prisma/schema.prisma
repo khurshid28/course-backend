@@ -35,6 +35,7 @@ enum PaymentMethod {
   CLICK
   PAYME
   UZUM
+  BALANCE
 }
 
 enum PaymentStatus {
@@ -42,6 +43,17 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   CANCELLED
+}
+
+enum PaymentType {
+  COURSE_PURCHASE
+  BALANCE_TOPUP
+}
+
+enum PromoCodeType {
+  SINGLE_USE      // Bir martalik
+  USER_SINGLE_USE // Har bir user uchun bir martalik
+  UNLIMITED       // Cheksiz
 }
 
 model User {
@@ -53,6 +65,7 @@ model User {
   avatar          String?          @db.VarChar(500)
   gender          Gender?
   region          Region?
+  balance         Decimal          @db.Decimal(10, 2) @default(0)
   isVerified      Boolean          @default(false)
   isActive        Boolean          @default(true)
   createdAt       DateTime         @default(now())
@@ -68,6 +81,7 @@ model User {
   certificates      Certificate[]
   teacher           Teacher?
   notifications     Notification[]
+  promoCodeUsages   PromoCodeUsage[]
 
   @@index([phone])
   @@index([email])
@@ -154,6 +168,8 @@ model Course {
   faqs            CourseFAQ[]
   banners         Banner[]
   tests           Test[]
+  payments        Payment[]
+  promoCodeUsages PromoCodeUsage[]
 
   @@index([teacherId])
   @@index([categoryId])
@@ -371,6 +387,7 @@ model Notification {
   message     String    @db.Text
   type        String    @db.VarChar(50) // 'course', 'discount', 'certificate', 'video'
   icon        String?   @db.VarChar(100)
+  image       String?   @db.VarChar(500)
   link        String?   @db.VarChar(500)
   isRead      Boolean   @default(false)
   createdAt   DateTime  @default(now())
@@ -382,12 +399,55 @@ model Notification {
   @@index([createdAt])
 }
 
+model PromoCode {
+  id              Int             @id @default(autoincrement())
+  code            String          @unique @db.VarChar(50)
+  discountPercent Int?            // 10 = 10%, null if using discountAmount
+  discountAmount  Decimal?        @db.Decimal(10, 2) // Fixed amount discount, null if using discountPercent
+  type            PromoCodeType   @default(USER_SINGLE_USE)
+  maxUsageCount   Int?            // Null = unlimited
+  currentUsageCount Int           @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  usages          PromoCodeUsage[]
+  payments        Payment[]
+
+  @@index([code])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model PromoCodeUsage {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  promoCodeId Int
+  courseId    Int
+  discount    Decimal   @db.Decimal(10, 2)
+  usedAt      DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, promoCodeId]) // Har bir user bir promocode'ni faqat bir marta ishlatadi
+  @@index([userId])
+  @@index([promoCodeId])
+  @@index([courseId])
+}
+
 model Payment {
   id              Int           @id @default(autoincrement())
   userId          Int
-  courseId        Int
+  courseId        Int?
+  promoCodeId     Int?
   amount          Decimal       @db.Decimal(10, 2)
+  originalAmount  Decimal?      @db.Decimal(10, 2) // Original price before discount
+  discount        Decimal?      @db.Decimal(10, 2) // Discount amount applied
   method          PaymentMethod
+  type            PaymentType   @default(COURSE_PURCHASE)
   status          PaymentStatus @default(PENDING)
   transactionId   String?       @unique @db.VarChar(255)
   paymentDate     DateTime?
@@ -395,8 +455,13 @@ model Payment {
   updatedAt       DateTime      @updatedAt
   
   user            User          @relation(fields: [userId], references: [id])
+  course          Course?       @relation(fields: [courseId], references: [id])
+  promoCode       PromoCode?    @relation(fields: [promoCodeId], references: [id])
 
   @@index([userId])
+  @@index([courseId])
+  @@index([promoCodeId])
   @@index([transactionId])
   @@index([status])
+  @@index([type])
 }

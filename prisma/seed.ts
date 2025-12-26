@@ -69,13 +69,13 @@ async function main() {
       update: {},
       create: {
         name: 'Akmal Ergashev',
-        bio: '5 yillik tajribaga ega Flutter dasturchi. 20+ mobil ilovalar yaratgan.',
+        bio: '5 yillik tajribaga ega Flutter dasturchi. Google Developer Expert. 20+ mobil ilovalar yaratgan va 50+ startup loyihalarda ishtirok etgan. MIT dan kompyuter fanlari bo\'yicha magistr darajasi.',
         email: 'akmal@example.com',
         phone: '+998901234567',
-        avatar: 'https://i.pravatar.cc/300?img=12',
-        rating: 4.8,
-        totalRatings: 156,
-        categories: 'Flutter,Mobile Development,Dart',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+        rating: 4.9,
+        totalRatings: 2847,
+        categories: 'Flutter,Mobile Development,Dart,Firebase',
       },
     }),
     prisma.teacher.upsert({
@@ -83,13 +83,13 @@ async function main() {
       update: {},
       create: {
         name: 'Dilshod Karimov',
-        bio: 'Backend dasturlash bo\'yicha mutaxassis. Node.js, Python, Go.',
+        bio: 'Senior Backend Engineer @ Yandex. 8+ yillik tajriba. Mikroservislar, API Development, va Cloud Architecture bo\'yicha mutaxassis. 100+ mijozlarga backend yechimlar yaratgan.',
         email: 'dilshod@example.com',
         phone: '+998901234568',
-        avatar: 'https://i.pravatar.cc/300?img=33',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
         rating: 4.9,
-        totalRatings: 203,
-        categories: 'Backend,Node.js,Python,API Development',
+        totalRatings: 3521,
+        categories: 'Backend,Node.js,Python,API Development,AWS',
       },
     }),
     prisma.teacher.upsert({
@@ -97,13 +97,139 @@ async function main() {
       update: {},
       create: {
         name: 'Nigora Saidova',
-        bio: 'UI/UX dizayner. Adobe XD, Figma, Sketch.',
+        bio: 'Lead UI/UX Designer @ EPAM. Adobe Certified Professional. 6+ yillik tajriba. 200+ loyihalarni dizayn qilgan. Awwwards va CSS Design Awards sovrindori.',
         email: 'nigora@example.com',
         phone: '+998901234569',
-        avatar: 'https://i.pravatar.cc/300?img=47',
-        rating: 4.7,
-        totalRatings: 128,
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
+        rating: 4.8,
+        totalRatings: 1986,
         categories: 'UI/UX Design,Figma,Adobe XD,Web Design',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 4 },
+      update: {},
+      create: {
+        name: 'Sardor Rahimov',
+        bio: 'Full Stack Developer va Startup Mentor. Y Combinator dasturida qatnashgan. React, Next.js, va zamonaviy web texnologiyalar bo\'yicha ekspert. 10+ muvaffaqiyatli startup yaratgan.',
+        email: 'sardor@example.com',
+        phone: '+998901234570',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop',
+        rating: 4.9,
+        totalRatings: 4123,
+        categories: 'React,Next.js,Full Stack,JavaScript,TypeScript',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 5 },
+      update: {},
+      create: {
+        name: 'Malika Tursunova',
+        bio: 'Data Science va Machine Learning Specialist @ Google AI. Stanford dan PhD darajasi. Kaggle Grandmaster. 30+ research papers nashr etgan.',
+        email: 'malika@example.com',
+        phone: '+998901234571',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop',
+        rating: 5.0,
+        totalRatings: 1567,
+        categories: 'Data Science,Machine Learning,Python,AI,Deep Learning',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 6 },
+      update: {},
+      create: {
+        name: 'Javohir Ismoilov',
+        bio: 'DevOps Engineer @ Microsoft Azure. Kubernetes Certified Administrator. CI/CD pipelines va cloud infrastructure bo\'yicha 7+ yillik tajriba. 500+ server infratuzilmasini boshqargan.',
+        email: 'javohir@example.com',
+        phone: '+998901234572',
+        avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop',
+        rating: 4.8,
+        totalRatings: 2234,
+        categories: 'DevOps,Docker,Kubernetes,AWS,Azure,CI/CD',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 7 },
+      update: {},
+      create: {
+        name: 'Dildora Ahmadova',
+        bio: 'Digital Marketing Strategist. Google va Meta Certified Trainer. 50+ brendlar bilan ishlagan. E-commerce va social media marketing bo\'yicha 9+ yillik tajriba.',
+        email: 'dildora@example.com',
+        phone: '+998901234573',
+        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop',
+        rating: 4.7,
+        totalRatings: 3456,
+        categories: 'Digital Marketing,SMM,SEO,Google Ads,Content Marketing',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 8 },
+      update: {},
+      create: {
+        name: 'Bobur Yuldashev',
+        bio: 'iOS Developer @ Apple. Swift va SwiftUI bo\'yicha ekspert. 15+ AppStore Featured ilovalar yaratgan. WWDC Speaker va iOS community leader.',
+        email: 'bobur@example.com',
+        phone: '+998901234574',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
+        rating: 4.9,
+        totalRatings: 1876,
+        categories: 'iOS,Swift,SwiftUI,Mobile Development,Xcode',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 9 },
+      update: {},
+      create: {
+        name: 'Zilola Nazarova',
+        bio: 'Motion Designer va Video Editor. Adobe After Effects va Premiere Pro Certified. 1000+ kommersial videolar yaratgan. Netflix va Disney+ uchun ishlagan.',
+        email: 'zilola@example.com',
+        phone: '+998901234575',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop',
+        rating: 4.8,
+        totalRatings: 2145,
+        categories: 'Motion Design,Video Editing,After Effects,Premiere Pro,Animation',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 10 },
+      update: {},
+      create: {
+        name: 'Rustam Olimov',
+        bio: 'Blockchain Developer va Smart Contract Auditor. Ethereum va Solana ecosystemda 5+ yillik tajriba. 20+ DeFi loyihalar yaratgan va $100M+ auditlarni o\'tkazgan.',
+        email: 'rustam@example.com',
+        phone: '+998901234576',
+        avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop',
+        rating: 4.9,
+        totalRatings: 987,
+        categories: 'Blockchain,Solidity,Web3,Smart Contracts,DeFi',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 11 },
+      update: {},
+      create: {
+        name: 'Shoira Karimova',
+        bio: 'English Language Expert. CELTA va DELTA sertifikatlari. 12+ yillik xalqaro tajriba. IELTS va TOEFL bo\'yicha mutaxassis. 3000+ talabalar IELTS 7+ ballga erishgan.',
+        email: 'shoira@example.com',
+        phone: '+998901234577',
+        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
+        rating: 5.0,
+        totalRatings: 5432,
+        categories: 'English,IELTS,TOEFL,Academic English,Business English',
+      },
+    }),
+    prisma.teacher.upsert({
+      where: { id: 12 },
+      update: {},
+      create: {
+        name: 'Timur Safarov',
+        bio: 'Cybersecurity Expert @ Kaspersky Lab. CEH va OSCP sertifikatlari. Ethical hacking va penetration testing bo\'yicha 10+ yillik tajriba. 100+ kompaniyalarga security audit o\'tkazgan.',
+        email: 'timur@example.com',
+        phone: '+998901234578',
+        avatar: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=400&fit=crop',
+        rating: 4.9,
+        totalRatings: 1543,
+        categories: 'Cybersecurity,Ethical Hacking,Network Security,Penetration Testing',
       },
     }),
   ]);
@@ -584,6 +710,223 @@ async function main() {
     }),
   ]);
   console.log('✅ Created course comments');
+
+  // Create Notifications
+  console.log('Creating notifications...');
+  await Promise.all([
+    prisma.notification.create({
+      data: {
+        userId: testUser.id,
+        title: 'Yangi kurs qo\'shildi',
+        message: 'Flutter Development kursi sizga mos keladi. Hoziroq boshlang!',
+        type: 'course',
+        icon: 'school',
+        image: 'https://images.unsplash.com/photo-1617854818583-09e7f077a156?w=400&h=200&fit=crop',
+        link: '/courses/1',
+        isRead: false,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        userId: testUser.id,
+        title: 'Maxsus chegirma!',
+        message: 'Barcha kurslarga 20% chegirma! Faqat bugun.',
+        type: 'discount',
+        icon: 'discount',
+        image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=200&fit=crop',
+        link: '/courses',
+        isRead: false,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        userId: testUser.id,
+        title: 'Sertifikat tayyor',
+        message: 'Flutter Development kursidan sertifikatingiz tayyor!',
+        type: 'certificate',
+        icon: 'verified',
+        image: 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=400&h=200&fit=crop',
+        link: '/certificates',
+        isRead: true,
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        userId: testUser.id,
+        title: 'Yangi dars qo\'shildi',
+        message: 'Flutter Development kursiga 3 ta yangi video dars qo\'shildi',
+        type: 'video',
+        icon: 'play_circle',
+        image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=200&fit=crop',
+        link: '/courses/1',
+        isRead: true,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        userId: testUser.id,
+        title: 'Kurs yangilandi',
+        message: 'Backend Development kursi yangilandi. Yangi mavzular qo\'shildi!',
+        type: 'course',
+        icon: 'school',
+        image: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=400&h=200&fit=crop',
+        link: '/courses/2',
+        isRead: true,
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+      },
+    }),
+  ]);
+  console.log('✅ Created notifications');
+
+  // Create Payments
+  console.log('Creating test payments...');
+  await Promise.all([
+    // Balance topups
+    prisma.payment.create({
+      data: {
+        userId: testUser.id,
+        amount: 500000,
+        method: 'CLICK',
+        type: 'BALANCE_TOPUP',
+        status: 'SUCCESS',
+        transactionId: 'TOPUP_CLK_' + Date.now() + '_1',
+        paymentDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
+      },
+    }),
+    prisma.payment.create({
+      data: {
+        userId: testUser.id,
+        amount: 300000,
+        method: 'PAYME',
+        type: 'BALANCE_TOPUP',
+        status: 'SUCCESS',
+        transactionId: 'TOPUP_PAYME_' + Date.now() + '_2',
+        paymentDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+      },
+    }),
+    // Course purchases
+    prisma.payment.create({
+      data: {
+        userId: testUser.id,
+        courseId: 1,
+        amount: 250000,
+        method: 'BALANCE',
+        type: 'COURSE_PURCHASE',
+        status: 'SUCCESS',
+        transactionId: 'BAL_' + Date.now() + '_1',
+        paymentDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      },
+    }),
+    prisma.payment.create({
+      data: {
+        userId: testUser.id,
+        courseId: 2,
+        amount: 300000,
+        method: 'PAYME',
+        type: 'COURSE_PURCHASE',
+        status: 'SUCCESS',
+        transactionId: 'PAYME_' + Date.now() + '_3',
+        paymentDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+      },
+    }),
+    prisma.payment.create({
+      data: {
+        userId: testUser.id,
+        courseId: 3,
+        amount: 200000,
+        method: 'UZUM',
+        type: 'COURSE_PURCHASE',
+        status: 'SUCCESS',
+        transactionId: 'UZUM_' + Date.now() + '_4',
+        paymentDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+      },
+    }),
+  ]);
+  console.log('✅ Created test payments');
+
+  // Update user balance (500000 + 300000 - 250000 = 550000)
+  await prisma.user.update({
+    where: { id: testUser.id },
+    data: { balance: 550000 },
+  });
+  console.log('✅ Updated user balance');
+
+  // Create Promo Codes
+  console.log('Creating promo codes...');
+  const promoCodes = await Promise.all([
+    prisma.promoCode.upsert({
+      where: { code: 'WELCOME10' },
+      update: {},
+      create: {
+        code: 'WELCOME10',
+        discountPercent: 10,
+        type: 'USER_SINGLE_USE',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month
+        isActive: true,
+      },
+    }),
+    prisma.promoCode.upsert({
+      where: { code: 'NEWUSER20' },
+      update: {},
+      create: {
+        code: 'NEWUSER20',
+        discountPercent: 20,
+        type: 'USER_SINGLE_USE',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month
+        isActive: true,
+      },
+    }),
+    prisma.promoCode.upsert({
+      where: { code: 'SALE50' },
+      update: {},
+      create: {
+        code: 'SALE50',
+        discountPercent: 50,
+        type: 'SINGLE_USE',
+        maxUsageCount: 1,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week
+        isActive: true,
+      },
+    }),
+    prisma.promoCode.upsert({
+      where: { code: 'FIRST15' },
+      update: {},
+      create: {
+        code: 'FIRST15',
+        discountPercent: 15,
+        type: 'USER_SINGLE_USE',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month
+        isActive: true,
+      },
+    }),
+    // Summalik promocode'lar
+    prisma.promoCode.upsert({
+      where: { code: 'SAVE50000' },
+      update: {},
+      create: {
+        code: 'SAVE50000',
+        discountAmount: 50000,
+        type: 'USER_SINGLE_USE',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month
+        isActive: true,
+      },
+    }),
+    prisma.promoCode.upsert({
+      where: { code: 'GIFT100000' },
+      update: {},
+      create: {
+        code: 'GIFT100000',
+        discountAmount: 100000,
+        type: 'SINGLE_USE',
+        maxUsageCount: 1,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week
+        isActive: true,
+      },
+    }),
+  ]);
+  console.log(`✅ Created ${promoCodes.length} promo codes`);
 
   console.log('✅ Seed completed successfully!');
 }

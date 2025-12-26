@@ -31,6 +31,12 @@ export class CourseController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('enrolled/list')
+  getEnrolledCourses(@GetUser('id') userId: number) {
+    return this.courseService.getEnrolledCourses(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post(':id/feedback')
   addFeedback(
     @GetUser('id') userId: number,

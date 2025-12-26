@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsInt, IsNumber, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsInt, IsNumber, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CreatePaymentDto {
   @IsNotEmpty()
@@ -10,6 +10,10 @@ export class CreatePaymentDto {
   amount: number;
 
   @IsNotEmpty()
-  @IsEnum(['CLICK', 'PAYME', 'UZUM'])
-  method: 'CLICK' | 'PAYME' | 'UZUM';
+  @IsEnum(['CLICK', 'PAYME', 'UZUM', 'BALANCE'])
+  method: 'CLICK' | 'PAYME' | 'UZUM' | 'BALANCE';
+
+  @IsOptional()
+  @IsString()
+  promoCode?: string;
 }
