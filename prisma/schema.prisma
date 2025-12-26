@@ -82,6 +82,8 @@ model User {
   teacher           Teacher?
   notifications     Notification[]
   promoCodeUsages   PromoCodeUsage[]
+  teacherRatings    TeacherRating[]
+  courseRatings     CourseRating[]
 
   @@index([phone])
   @@index([email])
@@ -118,6 +120,7 @@ model Teacher {
   
   user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   courses     Course[]
+  ratings     TeacherRating[]
 
   @@index([email])
   @@index([userId])
@@ -170,6 +173,7 @@ model Course {
   tests           Test[]
   payments        Payment[]
   promoCodeUsages PromoCodeUsage[]
+  ratings         CourseRating[]
 
   @@index([teacherId])
   @@index([categoryId])
@@ -464,4 +468,38 @@ model Payment {
   @@index([transactionId])
   @@index([status])
   @@index([type])
+}
+
+model TeacherRating {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  teacherId   Int
+  rating      Int      // 1-5
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teacherId]) // Har bir user bir teacherni faqat bir marta baholaydi
+  @@index([userId])
+  @@index([teacherId])
+  @@index([rating])
+}
+
+model CourseRating {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  courseId    Int
+  rating      Int      // 1-5
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId]) // Har bir user bir kursni faqat bir marta baholaydi
+  @@index([userId])
+  @@index([courseId])
+  @@index([rating])
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCourseDto, CreateFeedbackDto } from './dto/course.dto';
 
@@ -252,5 +252,93 @@ export class CourseService {
     return this.prisma.feedback.findUnique({
       where: { userId_courseId: { userId, courseId } },
     });
+  }
+
+  async rateCourse(userId: number, courseId: number, rating: number) {
+    // Validate rating
+    if (rating < 1 || rating > 5) {
+      throw new BadRequestException('Rating must be between 1 and 5');
+    }
+
+    // Check if course exists
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // Upsert user rating
+    const existingRating = await this.prisma.courseRating.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+
+    if (existingRating) {
+      // Update existing rating
+      await this.prisma.courseRating.update({
+        where: {
+          userId_courseId: {
+            userId,
+            courseId,
+          },
+        },
+        data: { rating },
+      });
+    } else {
+      // Create new rating
+      await this.prisma.courseRating.create({
+        data: {
+          userId,
+          courseId,
+          rating,
+        },
+      });
+    }
+
+    // Recalculate course's average rating
+    const ratings = await this.prisma.courseRating.findMany({
+      where: { courseId },
+    });
+
+    const totalRatings = ratings.length;
+    const averageRating = totalRatings > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings
+      : 0;
+
+    // Update course's rating
+    await this.prisma.course.update({
+      where: { id: courseId },
+      data: {
+        rating: averageRating,
+      },
+    });
+
+    return {
+      success: true,
+      rating,
+      averageRating,
+      totalRatings,
+    };
+  }
+
+  async getUserCourseRating(userId: number, courseId: number) {
+    const rating = await this.prisma.courseRating.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+
+    return {
+      userRating: rating?.rating || null,
+    };
   }
 }
