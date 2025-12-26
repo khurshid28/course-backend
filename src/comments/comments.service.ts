@@ -9,25 +9,39 @@ export class CommentsService {
   async create(userId: number, createCommentDto: CreateCommentDto) {
     const { courseId, comment, rating, screenshots } = createCommentDto;
 
-    return this.prisma.courseComment.create({
-      data: {
-        userId,
-        courseId,
-        comment,
-        rating,
-        screenshots: JSON.stringify(screenshots || []),
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            surname: true,
-            avatar: true,
+    try {
+      console.log('Service create - userId:', userId, 'courseId:', courseId, 'comment:', comment, 'rating:', rating);
+      
+      if (!userId || !courseId) {
+        throw new Error(`Invalid data: userId=${userId}, courseId=${courseId}`);
+      }
+
+      const result = await this.prisma.courseComment.create({
+        data: {
+          userId,
+          courseId,
+          comment,
+          rating: rating || null,
+          screenshots: screenshots && screenshots.length > 0 ? JSON.stringify(screenshots) : null,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              surname: true,
+              avatar: true,
+            },
           },
         },
-      },
-    });
+      });
+      
+      console.log('Comment created successfully:', result.id);
+      return result;
+    } catch (error) {
+      console.error('Error creating comment:', error);
+      throw new Error(`Izoh yaratishda xatolik: ${error.message}`);
+    }
   }
 
   async findByCourseId(courseId: number) {

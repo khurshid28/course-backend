@@ -46,8 +46,13 @@ export class CommentsController {
     @Body() createCommentDto: CreateCommentDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
+    console.log('Creating comment with data:', {
+      userId: req.user?.id,
+      dto: createCommentDto,
+      filesCount: files?.length || 0,
+    });
     const screenshots = files ? files.map((file) => `/uploads/screenshots/${file.filename}`) : [];
-    return this.commentsService.create(req.user.userId, {
+    return this.commentsService.create(req.user.id, {
       ...createCommentDto,
       screenshots,
     });
