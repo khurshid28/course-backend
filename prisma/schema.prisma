@@ -186,6 +186,7 @@ model Section {
   title       String    @db.VarChar(255)
   description String?   @db.Text
   order       Int       @default(0)
+  isFree      Boolean   @default(false)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -305,6 +306,7 @@ model CourseComment {
   courseId    Int
   comment     String    @db.Text
   rating      Int?      // 1-5
+  images      String?   @db.Text // JSON array of image URLs
   screenshots String?   @db.Text // JSON array of screenshot URLs
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())

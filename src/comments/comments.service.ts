@@ -7,7 +7,7 @@ export class CommentsService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: number, createCommentDto: CreateCommentDto) {
-    const { courseId, comment, rating, screenshots } = createCommentDto;
+    const { courseId, comment, rating, images, screenshots } = createCommentDto;
 
     try {
       console.log('Service create - userId:', userId, 'courseId:', courseId, 'comment:', comment, 'rating:', rating);
@@ -22,6 +22,7 @@ export class CommentsService {
           courseId,
           comment,
           rating: rating || null,
+          images: images && images.length > 0 ? JSON.stringify(images) : null,
           screenshots: screenshots && screenshots.length > 0 ? JSON.stringify(screenshots) : null,
         },
         include: {

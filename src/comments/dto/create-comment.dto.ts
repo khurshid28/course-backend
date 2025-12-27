@@ -20,5 +20,9 @@ export class CreateCommentDto {
 
   @IsOptional()
   @IsArray()
+  images?: string[];
+
+  @IsOptional()
+  @IsArray()
   screenshots?: string[];
 }

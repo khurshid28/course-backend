@@ -1,6 +1,31 @@
 import { PrismaClient } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const prisma = new PrismaClient();
+
+// Helper function to copy video file to uploads directory
+function copyVideoToUploads(sourcePath: string, filename: string): string {
+  const uploadsDir = path.join(__dirname, '..', 'uploads', 'videos');
+  
+  // Create uploads directory if it doesn't exist
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  
+  const destPath = path.join(uploadsDir, filename);
+  
+  // Check if source file exists
+  if (fs.existsSync(sourcePath)) {
+    fs.copyFileSync(sourcePath, destPath);
+    console.log(`✅ Copied video: ${filename}`);
+    return `/uploads/videos/${filename}`;
+  } else {
+    console.log(`⚠️  Source video not found: ${sourcePath}`);
+    // Return a placeholder URL
+    return 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+  }
+}
 
 async function main() {
   console.log('🌱 Starting seed...');
@@ -577,12 +602,20 @@ async function main() {
 
   // Create Videos for other courses (shorter version)
   console.log('Creating videos for other courses...');
+  
+  // Copy sample video file
+  const sampleVideoPath = 'C:\\Users\\ismoi\\Downloads\\file_example_MP4_640_3MG.mp4';
+  const videoUrl = copyVideoToUploads(sampleVideoPath, 'sample-video.mp4');
+  
+  console.log(`📹 Video URL: ${videoUrl}`);
+  
   for (const course of courses.slice(1)) {
     const section = await prisma.section.create({
       data: {
         courseId: course.id,
         title: 'Boshlang\'ich qism',
         order: 1,
+        isFree: true,
       },
     });
 
@@ -592,9 +625,9 @@ async function main() {
           courseId: course.id,
           sectionId: section.id,
           title: 'Kirish',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          url: videoUrl,
           thumbnail: course.thumbnail,
-          duration: 300,
+          duration: 30,
           order: 1,
           isFree: true,
         },
@@ -604,9 +637,9 @@ async function main() {
           courseId: course.id,
           sectionId: section.id,
           title: 'Asosiy tushunchalar',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          url: videoUrl,
           thumbnail: course.thumbnail,
-          duration: 450,
+          duration: 30,
           order: 2,
           isFree: false,
         },
@@ -711,74 +744,77 @@ async function main() {
   ]);
   console.log('✅ Created course comments');
 
-  // Create Notifications
+  // Create Notifications for all users
   console.log('Creating notifications...');
-  await Promise.all([
-    prisma.notification.create({
-      data: {
-        userId: testUser.id,
-        title: 'Yangi kurs qo\'shildi',
-        message: 'Flutter Development kursi sizga mos keladi. Hoziroq boshlang!',
-        type: 'course',
-        icon: 'school',
-        image: 'https://images.unsplash.com/photo-1617854818583-09e7f077a156?w=400&h=200&fit=crop',
-        link: '/courses/1',
-        isRead: false,
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        userId: testUser.id,
-        title: 'Maxsus chegirma!',
-        message: 'Barcha kurslarga 20% chegirma! Faqat bugun.',
-        type: 'discount',
-        icon: 'discount',
-        image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=200&fit=crop',
-        link: '/courses',
-        isRead: false,
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        userId: testUser.id,
-        title: 'Sertifikat tayyor',
-        message: 'Flutter Development kursidan sertifikatingiz tayyor!',
-        type: 'certificate',
-        icon: 'verified',
-        image: 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?w=400&h=200&fit=crop',
-        link: '/certificates',
-        isRead: true,
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        userId: testUser.id,
-        title: 'Yangi dars qo\'shildi',
-        message: 'Flutter Development kursiga 3 ta yangi video dars qo\'shildi',
-        type: 'video',
-        icon: 'play_circle',
-        image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=200&fit=crop',
-        link: '/courses/1',
-        isRead: true,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        userId: testUser.id,
-        title: 'Kurs yangilandi',
-        message: 'Backend Development kursi yangilandi. Yangi mavzular qo\'shildi!',
-        type: 'course',
-        icon: 'school',
-        image: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=400&h=200&fit=crop',
-        link: '/courses/2',
-        isRead: true,
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      },
-    }),
-  ]);
-  console.log('✅ Created notifications');
+  const allUsers = await prisma.user.findMany();
+  
+  for (const user of allUsers) {
+    await Promise.all([
+      prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: 'Xush kelibsiz!',
+          message: 'Platformamizga xush kelibsiz! Eng yaxshi kurslarni o\'rganing.',
+          type: 'course',
+          icon: 'school',
+          image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=200&fit=crop',
+          link: '/courses',
+          isRead: false,
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: 'Yangi kurs qo\'shildi',
+          message: 'Flutter Development kursi sizga mos keladi. Hoziroq boshlang!',
+          type: 'course',
+          icon: 'school',
+          image: 'https://images.unsplash.com/photo-1617854818583-09e7f077a156?w=400&h=200&fit=crop',
+          link: '/courses/1',
+          isRead: false,
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: 'Maxsus chegirma!',
+          message: 'Barcha kurslarga 20% chegirma! Faqat 3 kun.',
+          type: 'discount',
+          icon: 'discount',
+          image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=200&fit=crop',
+          link: '/courses',
+          isRead: false,
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: 'Yangi video darslar',
+          message: 'Backend Development kursiga 5 ta yangi video dars qo\'shildi',
+          type: 'video',
+          icon: 'play_circle',
+          image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=200&fit=crop',
+          link: '/courses/2',
+          isRead: false,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: 'Balans to\'ldirish uchun bonus!',
+          message: '100,000 so\'m va undan ko\'proq to\'ldirsangiz 10% bonus oling!',
+          type: 'discount',
+          icon: 'discount',
+          image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&h=200&fit=crop',
+          link: '/profile/balance',
+          isRead: false,
+          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+        },
+      }),
+    ]);
+  }
+  console.log('✅ Created notifications for all users');
 
   // Create Payments
   console.log('Creating test payments...');
