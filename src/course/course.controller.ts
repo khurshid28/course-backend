@@ -2,17 +2,20 @@ import { Controller, Get, Post, Param, Body, UseGuards, ParseIntPipe, Req } from
 import { CourseService } from './course.service';
 import { CreateFeedbackDto } from './dto/course.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { GetUser } from '../auth/get-user.decorator';
 
 @Controller('courses')
 export class CourseController {
   constructor(private courseService: CourseService) {}
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
   getAllCourses(@GetUser('id') userId?: number) {
     return this.courseService.getAllCourses(userId);
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
   getCourseById(@Param('id', ParseIntPipe) id: number, @GetUser('id') userId?: number) {
     return this.courseService.getCourseById(id, userId);
@@ -51,18 +54,18 @@ export class CourseController {
   rateCourse(
     @Param('id', ParseIntPipe) courseId: number,
     @Body('rating', ParseIntPipe) rating: number,
-    @Req() req: any,
+    @GetUser('id') userId: number,
   ) {
-    return this.courseService.rateCourse(req.user.id, courseId, rating);
+    return this.courseService.rateCourse(userId, courseId, rating);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/user-rating')
   getUserCourseRating(
     @Param('id', ParseIntPipe) courseId: number,
-    @Req() req: any,
+    @GetUser('id') userId: number,
   ) {
-    return this.courseService.getUserCourseRating(req.user.id, courseId);
+    return this.courseService.getUserCourseRating(userId, courseId);
   }
 
   @UseGuards(JwtAuthGuard)

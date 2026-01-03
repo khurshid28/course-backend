@@ -11,12 +11,12 @@ export class CreateCommentDto {
   @IsString()
   comment: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
-  @Min(1)
+  @Min(0)
   @Max(5)
   @Type(() => Number)
-  rating: number;
+  rating?: number;
 
   @IsOptional()
   @IsArray()

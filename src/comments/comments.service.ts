@@ -21,7 +21,7 @@ export class CommentsService {
           userId,
           courseId,
           comment,
-          rating: rating || null,
+          rating: rating && rating > 0 ? rating : null,
           images: images && images.length > 0 ? JSON.stringify(images) : null,
           screenshots: screenshots && screenshots.length > 0 ? JSON.stringify(screenshots) : null,
         },

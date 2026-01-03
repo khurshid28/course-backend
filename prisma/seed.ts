@@ -964,6 +964,148 @@ async function main() {
   ]);
   console.log(`✅ Created ${promoCodes.length} promo codes`);
 
+  // Create Notifications for test user
+  console.log('Creating notifications...');
+  const notifications = await Promise.all([
+    prisma.notification.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Yangi kurs qo\'shildi!',
+        message: 'Flutter Mobile Development kursi hozir mavjud. 30% chegirma bilan sotib oling!',
+        type: 'course',
+        icon: 'mdi:school',
+        image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400',
+        link: '/courses/1',
+        isRead: false,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Maxsus chegirma!',
+        message: 'SALE50 promo kodi bilan 50% chegirma oling. Faqat bugun!',
+        type: 'discount',
+        icon: 'mdi:sale',
+        image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400',
+        link: '/promo/SALE50',
+        isRead: false,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 3 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Yangi dars qo\'shildi',
+        message: 'Flutter kursingizga 5 ta yangi video dars qo\'shildi. Ko\'rib chiqing!',
+        type: 'video',
+        icon: 'mdi:video',
+        image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400',
+        link: '/courses/1/videos',
+        isRead: false,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 4 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Sertifikat tayyor!',
+        message: 'Flutter Mobile Development kursi uchun sertifikatingiz tayyor. Yuklab oling!',
+        type: 'certificate',
+        icon: 'mdi:certificate',
+        image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400',
+        link: '/certificates/1',
+        isRead: true,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 5 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'React.js kursi boshlanmoqda',
+        message: 'Siz yozilgan React.js Advanced kursi 3 kundan keyin boshlanadi. Tayyorlaning!',
+        type: 'course',
+        icon: 'mdi:react',
+        image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
+        link: '/courses/2',
+        isRead: false,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 6 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Balansga pul qo\'shildi',
+        message: 'Hisobingizga 500,000 so\'m qo\'shildi. Endi yangi kurslar sotib olishingiz mumkin!',
+        type: 'payment',
+        icon: 'mdi:wallet',
+        link: '/profile/balance',
+        isRead: true,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 7 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Yangi ustoz qo\'shildi',
+        message: 'Sherzod Turdibekov - Python Senior Developer platformaga qo\'shildi. Kurslarini ko\'ring!',
+        type: 'teacher',
+        icon: 'mdi:account-tie',
+        image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+        link: '/teachers/5',
+        isRead: false,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 8 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Testdan o\'tdingiz!',
+        message: 'Flutter asoslari testidan 95/100 ball bilan o\'tdingiz. Ajoyib natija!',
+        type: 'test',
+        icon: 'mdi:clipboard-check',
+        link: '/tests/results/1',
+        isRead: true,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 9 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Tug\'ilgan kuningiz muborak!',
+        message: 'Tug\'ilgan kuningiz munosabati bilan 20% chegirma sovg\'asi! BIRTHDAY20 kodini ishlating.',
+        type: 'special',
+        icon: 'mdi:cake-variant',
+        link: '/promo/BIRTHDAY20',
+        isRead: false,
+      },
+    }),
+    prisma.notification.upsert({
+      where: { id: 10 },
+      update: {},
+      create: {
+        userId: testUser.id,
+        title: 'Yangilanish mavjud',
+        message: 'Ilova versiyasi 2.0 chiqdi. Yangi xususiyatlar va tezkor ishlash!',
+        type: 'system',
+        icon: 'mdi:update',
+        link: '/updates',
+        isRead: false,
+      },
+    }),
+  ]);
+  console.log(`✅ Created ${notifications.length} notifications`);
+
   console.log('✅ Seed completed successfully!');
 }
 

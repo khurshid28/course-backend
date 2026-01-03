@@ -17,6 +17,8 @@ export class CourseService {
             videos: true,
             enrollments: true,
             feedbacks: true,
+            ratings: true,
+            sections: true,
           },
         },
       },
@@ -98,6 +100,14 @@ export class CourseService {
             },
           },
           orderBy: { createdAt: 'desc' },
+        },
+        _count: {
+          select: {
+            enrollments: true,
+            sections: true,
+            ratings: true,
+            videos: true,
+          },
         },
       },
     });

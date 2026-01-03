@@ -24,12 +24,12 @@ export class CommentsController {
 
   @Post()
   @UseInterceptors(
-    FilesInterceptor('screenshots', 5, {
+    FilesInterceptor('images', 5, {
       storage: diskStorage({
-        destination: './uploads/screenshots',
+        destination: './uploads/images',
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `screenshot-${uniqueSuffix}${extname(file.originalname)}`);
+          cb(null, `comment-${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
       fileFilter: (req, file, cb) => {
@@ -51,10 +51,10 @@ export class CommentsController {
       dto: createCommentDto,
       filesCount: files?.length || 0,
     });
-    const screenshots = files ? files.map((file) => `/uploads/screenshots/${file.filename}`) : [];
+    const images = files ? files.map((file) => `/uploads/images/${file.filename}`) : [];
     return this.commentsService.create(req.user.id, {
       ...createCommentDto,
-      screenshots,
+      images,
     });
   }
 
