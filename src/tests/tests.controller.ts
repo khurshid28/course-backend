@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { TestsService } from './tests.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SubmitTestDto } from './dto/submit-test.dto';
+import { SubmitAnswerDto } from './dto/submit-answer.dto';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { PdfService } from './pdf.service';
@@ -31,8 +32,36 @@ export class TestsController {
   }
 
   @Get('course/:courseId')
-  findByCourseId(@Param('courseId') courseId: string) {
-    return this.testsService.findByCourseId(+courseId);
+  findByCourseId(@Param('courseId') courseId: string, @Request() req) {
+    return this.testsService.findByCourseId(+courseId, req.user.userId);
+  }
+
+  // Test session - boshlash
+  @Post(':testId/start')
+  async startTestSession(@Param('testId') testId: string, @Request() req) {
+    return this.testsService.startTestSession(+testId, req.user.userId);
+  }
+
+  // Har bir javobni yuborish (real-time)
+  @Post('session/:sessionId/answer')
+  async submitAnswer(
+    @Param('sessionId') sessionId: string,
+    @Body() dto: SubmitAnswerDto,
+    @Request() req,
+  ) {
+    return this.testsService.submitAnswer(+sessionId, dto, req.user.userId);
+  }
+
+  // Session holatini olish
+  @Get('session/:sessionId/status')
+  async getSessionStatus(@Param('sessionId') sessionId: string, @Request() req) {
+    return this.testsService.getSessionStatus(+sessionId, req.user.userId);
+  }
+
+  // Test'ni tugatish va natija olish
+  @Post('session/:sessionId/complete')
+  async completeTest(@Param('sessionId') sessionId: string, @Request() req) {
+    return this.testsService.completeTest(+sessionId, req.user.userId);
   }
 
   @Get(':id')
@@ -50,32 +79,23 @@ export class TestsController {
     return this.testsService.getUserCertificates(req.user.userId);
   }
 
-  @Get('certificates/:certificateNo')
-  getCertificate(@Param('certificateNo') certificateNo: string) {
-    return this.testsService.getCertificate(certificateNo);
+  // Public - har kim ko'rishi mumkin
+  @Get('certificates/verify/:certificateNo')
+  verifyCertificate(@Param('certificateNo') certificateNo: string) {
+    return this.testsService.verifyCertificate(certificateNo);
   }
 
-  @Get('certificates/:certificateNo/download')
+  // Certificate PDF download
+  @Get('certificates/download/:certificateNo')
   async downloadCertificate(
     @Param('certificateNo') certificateNo: string,
     @Res() res: Response,
   ) {
-    const certificate = await this.testsService.getCertificate(certificateNo);
-    
-    if (!certificate) {
-      res.status(404).json({ message: 'Sertifikat topilmadi' });
-      return;
-    }
+    return this.testsService.downloadCertificate(certificateNo, res);
+  }
 
-    await this.pdfService.generateCertificate(
-      {
-        certificateNo: certificate.certificateNo,
-        userName: `${certificate.user.firstName} ${certificate.user.surname}`,
-        courseName: certificate.testResult.test.course.title,
-        score: certificate.testResult.score,
-        issuedAt: certificate.issuedAt,
-      },
-      res,
-    );
+  @Get('certificates/:certificateNo')
+  getCertificate(@Param('certificateNo') certificateNo: string) {
+    return this.testsService.getCertificate(certificateNo);
   }
 }

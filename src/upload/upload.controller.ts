@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, Body } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -6,17 +6,18 @@ import { UploadService } from './upload.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('upload')
-@UseGuards(JwtAuthGuard)
 export class UploadController {
   constructor(private uploadService: UploadService) {}
 
   @Post('image')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads/images',
         filename: (req, file, cb) => {
-          const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${extname(file.originalname)}`;
+          const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const filename = `${Date.now()}-${originalName}`;
           cb(null, filename);
         },
       }),
@@ -36,29 +37,74 @@ export class UploadController {
     };
   }
 
+  @Post('video-from-url')
+  async uploadVideoFromUrl(
+    @Body('url') url: string,
+    @Body('isFree') isFree?: string,
+  ) {
+    if (!url) {
+      throw new Error('URL is required');
+    }
+
+    const isFreeBoolean = isFree === 'true' || isFree === '1';
+    const result = await this.uploadService.downloadVideoFromUrl(url, isFreeBoolean);
+    return result;
+  }
+
   @Post('video')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads/videos',
         filename: (req, file, cb) => {
-          const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${extname(file.originalname)}`;
+          const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const filename = `${Date.now()}-${originalName}`;
           cb(null, filename);
         },
       }),
       fileFilter: (req, file, cb) => {
-        if (!file.mimetype.match(/\/(mp4|avi|mov|wmv|flv|webm)$/)) {
+        console.log('File mimetype:', file.mimetype);
+        const allowedMimes = ['video/mp4', 'video/avi', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 'video/x-flv', 'video/webm', 'application/octet-stream'];
+        if (allowedMimes.includes(file.mimetype) || file.mimetype.startsWith('video/')) {
+          cb(null, true);
+        } else {
           return cb(new Error('Only video files are allowed!'), false);
         }
-        cb(null, true);
       },
-      limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+      limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
     }),
   )
-  uploadVideo(@UploadedFile() file: Express.Multer.File) {
+  async uploadVideo(@UploadedFile() file: Express.Multer.File, @Body('isFree') isFree?: string) {
+    const isFreeBoolean = isFree === 'true' || isFree === '1';
+    const filePath = `./uploads/videos/${file.filename}`;
+    
+    // Video vaqtini olish
+    let duration = 0;
+    try {
+      duration = await this.uploadService.getVideoDuration(filePath);
+    } catch (error) {
+      console.error('Error getting video duration:', error);
+    }
+    
     return {
       url: `/uploads/videos/${file.filename}`,
       filename: file.filename,
+      size: file.size, // bytes
+      sizeInMB: (file.size / (1024 * 1024)).toFixed(2), // MB formatda
+      duration: duration, // seconds
+      durationFormatted: this.formatDuration(duration), // HH:MM:SS formatda
+      isFree: isFreeBoolean,
     };
+  }
+
+  private formatDuration(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
 }

@@ -50,6 +50,15 @@ enum PaymentType {
   BALANCE_TOPUP
 }
 
+enum TestAvailability {
+  ANYTIME          // Har doim
+  DAILY            // Har kuni
+  EVERY_3_DAYS     // Har 3 kunda
+  WEEKLY           // Har haftada
+  MONTHLY          // Har oyda
+  YEARLY           // Har yilda
+}
+
 enum PromoCodeType {
   SINGLE_USE      // Bir martalik
   USER_SINGLE_USE // Har bir user uchun bir martalik
@@ -78,6 +87,7 @@ model User {
   payments          Payment[]
   comments          CourseComment[]
   testResults       TestResult[]
+  testSessions      TestSession[]
   certificates      Certificate[]
   teacher           Teacher?
   notifications     Notification[]
@@ -208,6 +218,7 @@ model Video {
   url         String    @db.VarChar(500)
   thumbnail   String?   @db.VarChar(500)
   duration    Int?      // in seconds
+  size        BigInt?   // in bytes
   order       Int       @default(0)
   isFree      Boolean   @default(false)
   screenshots String?   @db.Text // JSON array of screenshot URLs
@@ -224,49 +235,92 @@ model Video {
 }
 
 model Test {
-  id              Int           @id @default(autoincrement())
-  courseId        Int
-  title           String        @db.VarChar(255)
-  description     String?       @db.Text
-  duration        Int           // in minutes (timer)
-  passingScore    Int           @default(70) // percentage
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id                    Int               @id @default(autoincrement())
+  courseId              Int
+  title                 String            @db.VarChar(255)
+  description           String?           @db.Text
+  duration              Int               // in minutes (timer)
+  maxDuration           Int               @default(60) // max vaqt (minutes) - default 1 soat
+  passingScore          Int               @default(70) // percentage
+  minCorrectAnswers     Int               @default(18) // minimum to'g'ri javoblar certificate uchun
+  availabilityType      TestAvailability  @default(ANYTIME)
+  availableAfterDays    Int               @default(0) // kurs sotib olingandan keyin necha kundan so'ng
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
   
-  course          Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  questions       TestQuestion[]
-  results         TestResult[]
+  course                Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions             TestQuestion[]
+  results               TestResult[]
+  sessions              TestSession[]
 
   @@index([courseId])
 }
 
 model TestQuestion {
-  id          Int       @id @default(autoincrement())
-  testId      Int
-  question    String    @db.Text
-  options     String    @db.Text // JSON array of options
-  correctAnswer Int     // index of correct option
-  order       Int       @default(0)
-  createdAt   DateTime  @default(now())
+  id            Int                 @id @default(autoincrement())
+  testId        Int
+  question      String              @db.Text
+  options       String              @db.Text // JSON array of options
+  correctAnswer Int                 // index of correct option
+  order         Int                 @default(0)
+  createdAt     DateTime            @default(now())
   
-  test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  test          Test                @relation(fields: [testId], references: [id], onDelete: Cascade)
+  sessionAnswers TestSessionAnswer[]
 
   @@index([testId])
 }
 
-model TestResult {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  testId      Int
-  score       Int       // percentage
-  answers     String    @db.Text // JSON array of user answers
-  isPassed    Boolean   @default(false)
-  completedAt DateTime  @default(now())
+model TestSession {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  testId          Int
+  startedAt       DateTime  @default(now())
+  expiresAt       DateTime  // startedAt + maxDuration
+  submittedAt     DateTime? // test tugallanganda
+  isExpired       Boolean   @default(false)
+  isSubmitted     Boolean   @default(false)
+  currentAnswers  String    @db.Text // JSON: {questionId: selectedAnswer}
   
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
-  certificate Certificate?
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test            Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers         TestSessionAnswer[]
+
+  @@index([userId])
+  @@index([testId])
+  @@index([isExpired])
+}
+
+model TestSessionAnswer {
+  id              Int         @id @default(autoincrement())
+  sessionId       Int
+  questionId      Int
+  selectedAnswer  Int         // tanlangan javob indexi
+  answeredAt      DateTime    @default(now())
+  
+  session         TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question        TestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId]) // Har bir savolga faqat 1 marta javob
+  @@index([sessionId])
+  @@index([questionId])
+}
+
+model TestResult {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  testId          Int
+  score           Int           // percentage
+  correctAnswers  Int           // to'g'ri javoblar soni
+  totalQuestions  Int           // jami savollar soni
+  answers         String        @db.Text // JSON array of user answers
+  isPassed        Boolean       @default(false)
+  completedAt     DateTime      @default(now())
+  
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test            Test          @relation(fields: [testId], references: [id], onDelete: Cascade)
+  certificates    Certificate[]
 
   @@index([userId])
   @@index([testId])
@@ -278,6 +332,7 @@ model Certificate {
   courseId      Int?
   testResultId  Int        @unique
   certificateNo String     @unique @db.VarChar(100)
+  pdfUrl        String?    @db.VarChar(500)
   issuedAt      DateTime   @default(now())
   
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)

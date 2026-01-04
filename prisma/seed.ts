@@ -27,6 +27,20 @@ function copyVideoToUploads(sourcePath: string, filename: string): string {
   }
 }
 
+// Helper function to get file size
+function getFileSize(filePath: string): bigint {
+  try {
+    if (fs.existsSync(filePath)) {
+      const stats = fs.statSync(filePath);
+      return BigInt(stats.size);
+    }
+  } catch (e) {
+    console.error('Error getting file size:', e);
+  }
+  // Default size for placeholder videos (estimate 1MB)
+  return BigInt(1048576);
+}
+
 async function main() {
   console.log('🌱 Starting seed...');
 
@@ -429,6 +443,7 @@ async function main() {
         url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
         thumbnail: 'https://picsum.photos/seed/flutter1/400/250',
         duration: 360,
+        size: BigInt(5510872), // ~5.25 MB
         order: 1,
         isFree: true,
         screenshots: JSON.stringify([
@@ -446,6 +461,7 @@ async function main() {
         url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
         thumbnail: 'https://picsum.photos/seed/flutter2/400/250',
         duration: 420,
+        size: BigInt(7340032), // ~7 MB
         order: 2,
         isFree: true,
         screenshots: JSON.stringify([
@@ -462,6 +478,7 @@ async function main() {
         url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
         thumbnail: 'https://picsum.photos/seed/flutter3/400/250',
         duration: 540,
+        size: BigInt(9437184), // ~9 MB
         order: 3,
         isFree: false,
       },
@@ -487,6 +504,7 @@ async function main() {
         url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
         thumbnail: 'https://picsum.photos/seed/flutter4/400/250',
         duration: 720,
+        size: BigInt(12582912), // ~12 MB
         order: 1,
         isFree: false,
         screenshots: JSON.stringify([
@@ -512,22 +530,55 @@ async function main() {
   ]);
   console.log('✅ Created sections and videos for Flutter course');
 
-  // Create Test for Course 1
-  console.log('Creating test for Flutter course...');
-  const test1 = await prisma.test.create({
+  // Create Tests for Course 1 (Multiple tests with different availability)
+  console.log('Creating tests for Flutter course...');
+  const test1_1 = await prisma.test.create({
     data: {
       courseId: 1,
-      title: 'Flutter Asoslari Final Test',
-      description: 'Kurs davomida o\'rgangan bilimlaringizni tekshiring',
-      duration: 30,
+      title: 'Flutter Asoslari - Boshlang\'ich Test',
+      description: 'Kurs sotib olingandan keyin darhol topshirish mumkin',
+      duration: 20,
+      maxDuration: 60,
       passingScore: 70,
+      minCorrectAnswers: 8, // 10 ta savoldan 8 tasi
+      availabilityType: 'ANYTIME',
+      availableAfterDays: 0,
     },
   });
 
+  const test1_2 = await prisma.test.create({
+    data: {
+      courseId: 1,
+      title: 'Flutter O\'rta Daraja - Haftalik Test',
+      description: 'Kurs sotib olingandan 7 kun o\'tgach, har haftada topshirish mumkin',
+      duration: 30,
+      maxDuration: 60,
+      passingScore: 75,
+      minCorrectAnswers: 15, // 20 ta savoldan 15 tasi
+      availabilityType: 'WEEKLY',
+      availableAfterDays: 7,
+    },
+  });
+
+  const test1_3 = await prisma.test.create({
+    data: {
+      courseId: 1,
+      title: 'Flutter Final Test',
+      description: 'Kurs sotib olingandan 14 kun o\'tgach, har 3 kunda topshirish mumkin',
+      duration: 45,
+      maxDuration: 60,
+      passingScore: 80,
+      minCorrectAnswers: 18, // 20 ta savoldan 18 tasi certificate uchun
+      availabilityType: 'EVERY_3_DAYS',
+      availableAfterDays: 14,
+    },
+  });
+
+  // Create questions for test 1_1 (Boshlang'ich)
   await Promise.all([
     prisma.testQuestion.create({
       data: {
-        testId: test1.id,
+        testId: test1_1.id,
         question: 'Flutter nima?',
         options: JSON.stringify([
           'Google tomonidan yaratilgan UI framework',
@@ -541,7 +592,7 @@ async function main() {
     }),
     prisma.testQuestion.create({
       data: {
-        testId: test1.id,
+        testId: test1_1.id,
         question: 'Stateless Widget nima uchun ishlatiladi?',
         options: JSON.stringify([
           'State o\'zgarmayotgan UI uchun',
@@ -555,7 +606,7 @@ async function main() {
     }),
     prisma.testQuestion.create({
       data: {
-        testId: test1.id,
+        testId: test1_1.id,
         question: 'Hot Reload nima qiladi?',
         options: JSON.stringify([
           'Ilovani to\'liq qayta yuklaydi',
@@ -568,7 +619,72 @@ async function main() {
       },
     }),
   ]);
-  console.log('✅ Created test for Flutter course');
+
+  // Create questions for test 1_2 (O'rta daraja)
+  await Promise.all([
+    prisma.testQuestion.create({
+      data: {
+        testId: test1_2.id,
+        question: 'State Management nima?',
+        options: JSON.stringify([
+          'Ma\'lumotlarni boshqarish usuli',
+          'Database',
+          'API',
+          'Widget',
+        ]),
+        correctAnswer: 0,
+        order: 1,
+      },
+    }),
+    prisma.testQuestion.create({
+      data: {
+        testId: test1_2.id,
+        question: 'Provider nima uchun ishlatiladi?',
+        options: JSON.stringify([
+          'State management uchun',
+          'Database uchun',
+          'Networking uchun',
+          'UI uchun',
+        ]),
+        correctAnswer: 0,
+        order: 2,
+      },
+    }),
+  ]);
+
+  // Create questions for test 1_3 (Final)
+  await Promise.all([
+    prisma.testQuestion.create({
+      data: {
+        testId: test1_3.id,
+        question: 'Clean Architecture nimani nazarda tutadi?',
+        options: JSON.stringify([
+          'Kod strukturasini yaxshi tashkil qilish',
+          'Kodni tozalash',
+          'Bug\'larni tuzatish',
+          'Test yozish',
+        ]),
+        correctAnswer: 0,
+        order: 1,
+      },
+    }),
+    prisma.testQuestion.create({
+      data: {
+        testId: test1_3.id,
+        question: 'Repository Pattern nima?',
+        options: JSON.stringify([
+          'Ma\'lumotlar manbalarini abstraktsiya qilish',
+          'Widget yaratish',
+          'State management',
+          'Animation',
+        ]),
+        correctAnswer: 0,
+        order: 2,
+      },
+    }),
+  ]);
+  
+  console.log('✅ Created 3 tests with different availability for Flutter course');
 
   // Create FAQs for Course 1
   console.log('Creating FAQs...');
