@@ -424,6 +424,12 @@ async function main() {
 
   // Create Sections and Videos for Course 1 (Flutter Development)
   console.log('Creating sections and videos for Flutter course...');
+  
+  // Copy sample video file for Course 1
+  const sampleVideoPath1 = 'C:\\Users\\ismoi\\Downloads\\file_example_MP4_640_3MG.mp4';
+  const videoUrl1 = copyVideoToUploads(sampleVideoPath1, 'sample-video.mp4');
+  console.log(`📹 Course 1 Video URL: ${videoUrl1}`);
+  
   const section1_1 = await prisma.section.create({
     data: {
       courseId: 1,
@@ -440,7 +446,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Kursga xush kelibsiz',
         description: 'Kursda nimalarni o\'rganishimiz va kurs haqida to\'liq ma\'lumot',
-        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        url: videoUrl1,
         thumbnail: 'https://picsum.photos/seed/flutter1/400/250',
         duration: 360,
         size: BigInt(5510872), // ~5.25 MB
@@ -458,7 +464,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Flutter o\'rnatish',
         description: 'Flutter SDK ni kompyuterga o\'rnatish va sozlash',
-        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        url: videoUrl1,
         thumbnail: 'https://picsum.photos/seed/flutter2/400/250',
         duration: 420,
         size: BigInt(7340032), // ~7 MB
@@ -475,7 +481,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Birinchi Flutter ilovasi',
         description: 'Hello World ilovasi yaratish va ishga tushirish',
-        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        url: videoUrl1,
         thumbnail: 'https://picsum.photos/seed/flutter3/400/250',
         duration: 540,
         size: BigInt(9437184), // ~9 MB
@@ -715,6 +721,82 @@ async function main() {
     }),
   ]);
   console.log('✅ Created FAQs');
+
+  // Create Tests for Course 2 (NestJS - 30 va 20 savollik testlar)
+  console.log('Creating tests for NestJS course...');
+  const test2_1 = await prisma.test.create({
+    data: {
+      courseId: 2,
+      title: 'NestJS Asoslari - Katta Test',
+      description: '30 savollik to\'liq test',
+      duration: 45,
+      maxDuration: 60,
+      passingScore: 70,
+      minCorrectAnswers: 21, // 30 ta savoldan 21 tasi (70%)
+      availabilityType: 'ANYTIME',
+      availableAfterDays: 0,
+    },
+  });
+
+  const test2_2 = await prisma.test.create({
+    data: {
+      courseId: 2,
+      title: 'NestJS O\'rta Daraja - Test',
+      description: '20 savollik o\'rta daraja test',
+      duration: 30,
+      maxDuration: 60,
+      passingScore: 75,
+      minCorrectAnswers: 15, // 20 ta savoldan 15 tasi (75%)
+      availabilityType: 'WEEKLY',
+      availableAfterDays: 7,
+    },
+  });
+
+  // Create 30 questions for test2_1
+  const test2_1_questions = [];
+  for (let i = 1; i <= 30; i++) {
+    test2_1_questions.push(
+      prisma.testQuestion.create({
+        data: {
+          testId: test2_1.id,
+          question: `NestJS savol ${i}: NestJS ${i === 1 ? 'nima' : i === 2 ? 'qaysi framework asosida qurilgan' : i === 3 ? 'decorator lardan qaysi biri controller yaratadi' : i === 4 ? 'service larda qaysi decorator ishlatiladi' : i === 5 ? 'dependency injection nimani ta\'minlaydi' : i === 6 ? 'module larda providers nima qiladi' : i === 7 ? 'middleware qachon ishlaydi' : i === 8 ? 'pipes nimalar uchun ishlatiladi' : i === 9 ? 'guards nima uchun kerak' : i === 10 ? 'interceptors qayerda ishlatiladi' : i === 11 ? 'DTO nima' : i === 12 ? 'TypeORM nima' : i === 13 ? 'Prisma nimaga kerak' : i === 14 ? 'JWT nima' : i === 15 ? 'Passport nima qiladi' : i === 16 ? 'GraphQL qaysi transport protokol' : i === 17 ? 'WebSocket qachon ishlatiladi' : i === 18 ? 'Microservices arxitekturasi nima' : i === 19 ? 'ConfigModule nima beradi' : i === 20 ? 'ValidationPipe nima qiladi' : i === 21 ? 'Exception filters qachon ishlatiladi' : i === 22 ? 'Logger service nimaga kerak' : i === 23 ? 'Testing da jest nima' : i === 24 ? 'e2e testing nima' : i === 25 ? 'Swagger nima beradi' : i === 26 ? 'CORS nima' : i === 27 ? 'Rate limiting nimani oldini oladi' : i === 28 ? 'Caching qachon foydali' : i === 29 ? 'Queue lar nimaga kerak' : 'Production deployment da nima muhim'}?`,
+          options: JSON.stringify([
+            i % 4 === 1 ? 'To\'g\'ri javob' : 'Noto\'g\'ri javob 1',
+            i % 4 === 2 ? 'To\'g\'ri javob' : 'Noto\'g\'ri javob 2',
+            i % 4 === 3 ? 'To\'g\'ri javob' : 'Noto\'g\'ri javob 3',
+            i % 4 === 0 ? 'To\'g\'ri javob' : 'Noto\'g\'ri javob 4',
+          ]),
+          correctAnswer: (i - 1) % 4,
+          order: i,
+        },
+      })
+    );
+  }
+  await Promise.all(test2_1_questions);
+
+  // Create 20 questions for test2_2
+  const test2_2_questions = [];
+  for (let i = 1; i <= 20; i++) {
+    test2_2_questions.push(
+      prisma.testQuestion.create({
+        data: {
+          testId: test2_2.id,
+          question: `NestJS o'rta savol ${i}: ${i === 1 ? 'Controller decorator parametrlari nimani belgilaydi' : i === 2 ? 'Async/await nima uchun kerak' : i === 3 ? 'Request lifecycle qanday ishlaydi' : i === 4 ? 'Custom decorator qanday yaratiladi' : i === 5 ? 'Database transaction nimaga kerak' : i === 6 ? 'Error handling eng yaxshi usuli' : i === 7 ? 'Serialization nima qiladi' : i === 8 ? 'Request validation qanday qilinadi' : i === 9 ? 'File upload qanday qabul qilinadi' : i === 10 ? 'Response transformation nima' : i === 11 ? 'Custom pipes qanday yaratiladi' : i === 12 ? 'Global middleware qanday qo\'shiladi' : i === 13 ? 'Authentication strategy nima' : i === 14 ? 'Authorization guard qanday ishlaydi' : i === 15 ? 'Custom repository pattern' : i === 16 ? 'Event emitter nima uchun' : i === 17 ? 'Schedule tasks qanday' : i === 18 ? 'Health checks nimaga kerak' : i === 19 ? 'Dynamic modules nima' : 'Circular dependency muammosi'}?`,
+          options: JSON.stringify([
+            i % 4 === 1 ? 'To\'g\'ri javob varianti' : 'Xato javob 1',
+            i % 4 === 2 ? 'To\'g\'ri javob varianti' : 'Xato javob 2',
+            i % 4 === 3 ? 'To\'g\'ri javob varianti' : 'Xato javob 3',
+            i % 4 === 0 ? 'To\'g\'ri javob varianti' : 'Xato javob 4',
+          ]),
+          correctAnswer: (i - 1) % 4,
+          order: i,
+        },
+      })
+    );
+  }
+  await Promise.all(test2_2_questions);
+  
+  console.log('✅ Created 2 tests with 30 and 20 questions for NestJS course');
 
   // Create Videos for other courses (shorter version)
   console.log('Creating videos for other courses...');

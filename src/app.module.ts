@@ -17,6 +17,7 @@ import { CommentsModule } from './comments/comments.module';
 import { TeacherCoursesModule } from './teacher-courses/teacher-courses.module';
 import { BannerModule } from './banner/banner.module';
 import { NotificationModule } from './notification/notification.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { NotificationModule } from './notification/notification.module';
     TeacherCoursesModule,
     BannerModule,
     NotificationModule,
+    SchedulerModule,
   ],
 })
 export class AppModule {}

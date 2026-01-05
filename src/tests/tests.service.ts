@@ -74,11 +74,15 @@ export class TestsService {
     // User enrollment va tests
     if (userId) {
       const enrollment = await this.prisma.enrollment.findFirst({
-        where: { userId, courseId },
+        where: { 
+          userId, 
+          courseId,
+          isActive: true // Faqat faol enrollmentlar
+        },
       });
 
       const tests = await this.prisma.test.findMany({
-        where: { courseId },
+        where: { courseId, isActive: true },
         include: {
           questions: {
             orderBy: { order: 'asc' },
@@ -100,16 +104,20 @@ export class TestsService {
             orderBy: { completedAt: 'desc' },
           });
 
-          const isAvailable = this.checkTestAvailability(
-            test,
-            enrollment?.enrolledAt,
-            lastAttempt?.completedAt,
-          );
+          // Agar user kursga yozilmagan bo'lsa, testlar ochilmaydi
+          const isAvailable = enrollment
+            ? this.checkTestAvailability(
+                test,
+                enrollment.enrolledAt,
+                lastAttempt?.completedAt,
+              )
+            : false;
 
           return {
             ...test,
             lastAttempt,
             isAvailable,
+            isEnrolled: !!enrollment, // Qo'shimcha field
           };
         }),
       );

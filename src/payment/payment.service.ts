@@ -6,6 +6,61 @@ import { CreatePaymentDto } from './dto/payment.dto';
 export class PaymentService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Subscription narxlarini hisoblash
+   * 1 oylik - to'liq narx
+   * 6 oylik - 15% chegirma
+   * 1 yillik - 25% chegirma
+   */
+  private calculateSubscriptionPrice(basePrice: number, duration: 'ONE_MONTH' | 'SIX_MONTHS' | 'ONE_YEAR'): {
+    price: number;
+    discount: number;
+    months: number;
+  } {
+    const basePriceNum = Number(basePrice);
+    
+    switch (duration) {
+      case 'ONE_MONTH':
+        return {
+          price: basePriceNum,
+          discount: 0,
+          months: 1,
+        };
+      case 'SIX_MONTHS':
+        const sixMonthTotal = basePriceNum * 6;
+        const sixMonthDiscount = sixMonthTotal * 0.15; // 15% chegirma
+        return {
+          price: sixMonthTotal - sixMonthDiscount,
+          discount: 15,
+          months: 6,
+        };
+      case 'ONE_YEAR':
+        const yearTotal = basePriceNum * 12;
+        const yearDiscount = yearTotal * 0.25; // 25% chegirma
+        return {
+          price: yearTotal - yearDiscount,
+          discount: 25,
+          months: 12,
+        };
+      default:
+        return {
+          price: basePriceNum,
+          discount: 0,
+          months: 1,
+        };
+    }
+  }
+
+  /**
+   * Muddatni hisoblash
+   */
+  private calculateExpirationDate(duration: 'ONE_MONTH' | 'SIX_MONTHS' | 'ONE_YEAR'): Date {
+    const now = new Date();
+    const months = this.calculateSubscriptionPrice(0, duration).months;
+    now.setMonth(now.getMonth() + months);
+    return now;
+  }
+
   async createPayment(userId: number, dto: CreatePaymentDto) {
     const course = await this.prisma.course.findUnique({
       where: { id: dto.courseId },
@@ -30,10 +85,21 @@ export class PaymentService {
       throw new BadRequestException('Already enrolled in this course');
     }
 
-    let finalAmount = dto.amount;
+    // Subscription narxini hisoblash
+    const subscriptionInfo = this.calculateSubscriptionPrice(
+      Number(course.price),
+      dto.subscriptionDuration
+    );
+
+    let finalAmount = subscriptionInfo.price;
     let promoCodeId: number | undefined;
-    let originalAmount: number | undefined;
+    let originalAmount = subscriptionInfo.price;
     let discount: number | undefined;
+    let subscriptionDiscount = 0;
+    
+    if (subscriptionInfo.discount > 0) {
+      subscriptionDiscount = Number(course.price) * subscriptionInfo.months - subscriptionInfo.price;
+    }
 
     // Apply promo code if provided
     if (dto.promoCode) {
@@ -68,9 +134,10 @@ export class PaymentService {
           userId,
           courseId: dto.courseId,
           promoCodeId,
+          subscriptionDuration: dto.subscriptionDuration,
           amount: finalAmount,
           originalAmount,
-          discount,
+          discount: discount || subscriptionDiscount,
           method: dto.method,
           type: 'COURSE_PURCHASE',
           status: 'SUCCESS',
@@ -79,12 +146,16 @@ export class PaymentService {
         },
       });
 
+      // Muddatni hisoblash
+      const expirationDate = this.calculateExpirationDate(dto.subscriptionDuration);
+
       // Enroll user in course
       await this.prisma.enrollment.create({
         data: {
           userId,
           courseId: dto.courseId,
-          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+          subscriptionDuration: dto.subscriptionDuration,
+          expiresAt: expirationDate,
         },
       });
 
@@ -110,9 +181,10 @@ export class PaymentService {
         userId,
         courseId: dto.courseId,
         promoCodeId,
+        subscriptionDuration: dto.subscriptionDuration,
         amount: finalAmount,
         originalAmount,
-        discount,
+        discount: discount || subscriptionDiscount,
         method: dto.method,
         type: 'COURSE_PURCHASE',
         status: 'PENDING',
@@ -151,11 +223,16 @@ export class PaymentService {
       },
     });
 
+    // Muddatni hisoblash
+    const expirationDate = this.calculateExpirationDate(payment.subscriptionDuration);
+
     // Enroll user in course
     await this.prisma.enrollment.create({
       data: {
         userId: payment.userId,
         courseId: payment.courseId,
+        subscriptionDuration: payment.subscriptionDuration,
+        expiresAt: expirationDate,
       },
     });
 

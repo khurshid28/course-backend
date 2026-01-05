@@ -39,13 +39,20 @@ export class AuthService {
       },
     });
 
-    // TODO: Send SMS via provider (for now, return code in development)
-    return {
+    // TODO: Send SMS via provider
+    // Note: Code is only returned in development mode for testing
+    const response: any = {
       message: 'Verification code sent',
       phone,
-      code: process.env.NODE_ENV === 'development' ? code : undefined,
       expiresIn: 120, // seconds
     };
+
+    // Only include code in development environment
+    if (process.env.NODE_ENV === 'development') {
+      response.code = code;
+    }
+
+    return response;
   }
 
   async verifyCode(dto: VerifyCodeDto) {

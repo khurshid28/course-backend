@@ -13,6 +13,10 @@ export class CreatePaymentDto {
   @IsEnum(['CLICK', 'PAYME', 'UZUM', 'BALANCE'])
   method: 'CLICK' | 'PAYME' | 'UZUM' | 'BALANCE';
 
+  @IsNotEmpty()
+  @IsEnum(['ONE_MONTH', 'SIX_MONTHS', 'ONE_YEAR'])
+  subscriptionDuration: 'ONE_MONTH' | 'SIX_MONTHS' | 'ONE_YEAR';
+
   @IsOptional()
   @IsString()
   promoCode?: string;

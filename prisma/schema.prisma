@@ -50,6 +50,12 @@ enum PaymentType {
   BALANCE_TOPUP
 }
 
+enum SubscriptionDuration {
+  ONE_MONTH   // 1 oylik
+  SIX_MONTHS  // 6 oylik
+  ONE_YEAR    // 1 yillik
+}
+
 enum TestAvailability {
   ANYTIME          // Har doim
   DAILY            // Har kuni
@@ -376,12 +382,13 @@ model CourseComment {
 }
 
 model Enrollment {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  courseId    Int
-  isActive    Boolean   @default(true)
-  enrolledAt  DateTime  @default(now())
-  expiresAt   DateTime?
+  id                  Int                     @id @default(autoincrement())
+  userId              Int
+  courseId            Int
+  subscriptionDuration SubscriptionDuration   @default(ONE_YEAR)
+  isActive            Boolean                 @default(true)
+  enrolledAt          DateTime                @default(now())
+  expiresAt           DateTime?
   
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -389,6 +396,8 @@ model Enrollment {
   @@unique([userId, courseId])
   @@index([userId])
   @@index([courseId])
+  @@index([expiresAt])
+  @@index([isActive])
 }
 
 model Feedback {
@@ -500,20 +509,21 @@ model PromoCodeUsage {
 }
 
 model Payment {
-  id              Int           @id @default(autoincrement())
-  userId          Int
-  courseId        Int?
-  promoCodeId     Int?
-  amount          Decimal       @db.Decimal(10, 2)
-  originalAmount  Decimal?      @db.Decimal(10, 2) // Original price before discount
-  discount        Decimal?      @db.Decimal(10, 2) // Discount amount applied
-  method          PaymentMethod
-  type            PaymentType   @default(COURSE_PURCHASE)
-  status          PaymentStatus @default(PENDING)
-  transactionId   String?       @unique @db.VarChar(255)
-  paymentDate     DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id                  Int                   @id @default(autoincrement())
+  userId              Int
+  courseId            Int?
+  promoCodeId         Int?
+  subscriptionDuration SubscriptionDuration? // Kurs uchun tanlangan muddat
+  amount              Decimal               @db.Decimal(10, 2)
+  originalAmount      Decimal?              @db.Decimal(10, 2) // Original price before discount
+  discount            Decimal?              @db.Decimal(10, 2) // Discount amount applied
+  method              PaymentMethod
+  type                PaymentType           @default(COURSE_PURCHASE)
+  status              PaymentStatus         @default(PENDING)
+  transactionId       String?               @unique @db.VarChar(255)
+  paymentDate         DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
   
   user            User          @relation(fields: [userId], references: [id])
   course          Course?       @relation(fields: [courseId], references: [id])
