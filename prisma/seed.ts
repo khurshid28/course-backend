@@ -425,15 +425,17 @@ async function main() {
   // Create Sections and Videos for Course 1 (Flutter Development)
   console.log('Creating sections and videos for Flutter course...');
   
-  // Copy sample video file for Course 1
-  const sampleVideoPath1 = 'C:\\Users\\ismoi\\Downloads\\file_example_MP4_640_3MG.mp4';
-  const videoUrl1 = copyVideoToUploads(sampleVideoPath1, 'sample-video.mp4');
-  console.log(`📹 Course 1 Video URL: ${videoUrl1}`);
-  
-  // Public sample videos for testing
-  const publicVideoUrl1 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-  const publicVideoUrl2 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4';
-  const publicVideoUrl3 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+  // Use reliable public sample videos
+  const video1 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+  const video2 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4';
+  const video3 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+  const video4 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4';
+  const video5 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4';
+  const video6 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4';
+  const video7 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4';
+  const video8 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4';
+  const video9 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4';
+  const video10 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
   
   const section1_1 = await prisma.section.create({
     data: {
@@ -451,7 +453,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Kursga xush kelibsiz',
         description: 'Kursda nimalarni o\'rganishimiz va kurs haqida to\'liq ma\'lumot',
-        url: publicVideoUrl1,
+        url: video1,
         thumbnail: 'https://picsum.photos/seed/flutter1/400/250',
         duration: 360,
         size: BigInt(5510872), // ~5.25 MB
@@ -469,7 +471,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Flutter o\'rnatish',
         description: 'Flutter SDK ni kompyuterga o\'rnatish va sozlash',
-        url: publicVideoUrl2,
+        url: video2,
         thumbnail: 'https://picsum.photos/seed/flutter2/400/250',
         duration: 420,
         size: BigInt(7340032), // ~7 MB
@@ -486,7 +488,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Birinchi Flutter ilovasi',
         description: 'Hello World ilovasi yaratish va ishga tushirish',
-        url: publicVideoUrl3,
+        url: video3,
         thumbnail: 'https://picsum.photos/seed/flutter3/400/250',
         duration: 540,
         size: BigInt(9437184), // ~9 MB
@@ -512,7 +514,7 @@ async function main() {
         sectionId: section1_2.id,
         title: 'Stateless va Stateful Widgetlar',
         description: 'Widget turlari va ularning farqlari',
-        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        url: video4,
         thumbnail: 'https://picsum.photos/seed/flutter4/400/250',
         duration: 720,
         size: BigInt(12582912), // ~12 MB
@@ -531,7 +533,7 @@ async function main() {
         sectionId: section1_2.id,
         title: 'Layout Widgetlari',
         description: 'Row, Column, Stack va boshqa layout widgetlar',
-        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        url: video5,
         thumbnail: 'https://picsum.photos/seed/flutter5/400/250',
         duration: 680,
         order: 2,
@@ -806,11 +808,10 @@ async function main() {
   // Create Videos for other courses (shorter version)
   console.log('Creating videos for other courses...');
   
-  // Copy sample video file
-  const sampleVideoPath = 'C:\\Users\\ismoi\\Downloads\\file_example_MP4_640_3MG.mp4';
-  const videoUrl = copyVideoToUploads(sampleVideoPath, 'sample-video.mp4');
-  
-  console.log(`📹 Video URL: ${videoUrl}`);
+  // Use public sample videos
+  const sampleVideos = [
+    video6, video7, video8, video9, video10
+  ];
   
   for (const course of courses.slice(1)) {
     const section = await prisma.section.create({
@@ -822,13 +823,15 @@ async function main() {
       },
     });
 
+    const videoIndex = course.id % sampleVideos.length;
+    
     await Promise.all([
       prisma.video.create({
         data: {
           courseId: course.id,
           sectionId: section.id,
           title: 'Kirish',
-          url: videoUrl,
+          url: sampleVideos[videoIndex],
           thumbnail: course.thumbnail,
           duration: 30,
           order: 1,
@@ -840,7 +843,7 @@ async function main() {
           courseId: course.id,
           sectionId: section.id,
           title: 'Asosiy tushunchalar',
-          url: videoUrl,
+          url: sampleVideos[(videoIndex + 1) % sampleVideos.length],
           thumbnail: course.thumbnail,
           duration: 30,
           order: 2,

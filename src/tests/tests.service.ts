@@ -655,9 +655,25 @@ export class TestsService {
 
     // Certificate yaratish (agar minCorrectAnswers dan ko'p bo'lsa)
     let certificate = null;
+    
+    // minCorrectAnswers ni dinamik hisoblash (test savollari soniga qarab)
+    const requiredCorrectAnswers = Math.min(
+      session.test.minCorrectAnswers,
+      Math.ceil(totalQuestions * 0.7) // Kamida 70% to'g'ri bo'lishi kerak
+    );
+    
     const shouldGetCertificate = 
       isPassed && 
-      correctAnswers >= session.test.minCorrectAnswers;
+      correctAnswers >= requiredCorrectAnswers;
+
+    console.log('=== SERTIFIKAT TEKSHIRUVI ===');
+    console.log('isPassed:', isPassed);
+    console.log('correctAnswers:', correctAnswers);
+    console.log('totalQuestions:', totalQuestions);
+    console.log('minCorrectAnswers (test config):', session.test.minCorrectAnswers);
+    console.log('requiredCorrectAnswers (calculated):', requiredCorrectAnswers);
+    console.log('shouldGetCertificate:', shouldGetCertificate);
+    console.log('===========================');
 
     if (shouldGetCertificate) {
       // User ma'lumotlarini olish

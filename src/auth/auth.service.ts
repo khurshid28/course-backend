@@ -160,6 +160,12 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    console.log('=== PROFILE DATA ===');
+    console.log('User ID:', userId);
+    console.log('Avatar URL:', user.avatar);
+    console.log('Full User:', JSON.stringify(user, null, 2));
+    console.log('===================');
+
     return user;
   }
 

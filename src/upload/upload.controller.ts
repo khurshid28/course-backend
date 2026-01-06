@@ -1,9 +1,11 @@
 import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, Body } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import { UploadService } from './upload.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import sharp from 'sharp';
+import { unlinkSync } from 'fs';
 
 @Controller('upload')
 export class UploadController {
@@ -30,7 +32,7 @@ export class UploadController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     }),
   )
-  uploadImage(@UploadedFile() file: Express.Multer.File) {
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
     return {
       url: `/uploads/images/${file.filename}`,
       filename: file.filename,
