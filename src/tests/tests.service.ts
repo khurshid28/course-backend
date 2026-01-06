@@ -104,14 +104,28 @@ export class TestsService {
             orderBy: { completedAt: 'desc' },
           });
 
-          // Agar user kursga yozilmagan bo'lsa, testlar ochilmaydi
-          const isAvailable = enrollment
+          // Debug logging
+          console.log(`\n🔍 Test availability check for: ${test.title}`);
+          console.log(`   availableAfterDays: ${test.availableAfterDays} (type: ${typeof test.availableAfterDays})`);
+          console.log(`   availabilityType: ${test.availabilityType}`);
+          console.log(`   enrollment: ${enrollment ? 'YES' : 'NO'}`);
+
+          // Birinchi test (availableAfterDays = 0) barcha userlar uchun ochiq
+          // Qolgan testlar faqat kursga yozilganlar uchun
+          const isFirstTestFree = Number(test.availableAfterDays) === 0 && String(test.availabilityType).toUpperCase() === 'ANYTIME';
+          console.log(`   isFirstTestFree: ${isFirstTestFree}`);
+
+          const isAvailable = isFirstTestFree
+            ? true // Birinchi test hamma uchun ochiq
+            : enrollment
             ? this.checkTestAvailability(
                 test,
                 enrollment.enrolledAt,
                 lastAttempt?.completedAt,
               )
             : false;
+
+          console.log(`   ✅ isAvailable: ${isAvailable}\n`);
 
           return {
             ...test,
@@ -272,6 +286,26 @@ export class TestsService {
     });
   }
 
+  async getUserTestResults(userId: number) {
+    return this.prisma.testResult.findMany({
+      where: { userId },
+      include: {
+        test: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                thumbnail: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { completedAt: 'desc' },
+    });
+  }
+
   async getCertificate(certificateNo: string) {
     return this.prisma.certificate.findUnique({
       where: { certificateNo },
@@ -302,18 +336,12 @@ export class TestsService {
   // ==================== SESSION MANAGEMENT ====================
 
   async startTestSession(testId: number, userId: number) {
-    // Test mavjudligini tekshirish
+    // Test mavjudligini tekshirish (to'g'ri javoblar bilan)
     const test = await this.prisma.test.findUnique({
       where: { id: testId },
       include: {
         questions: {
           orderBy: { order: 'asc' },
-          select: {
-            id: true,
-            question: true,
-            options: true,
-            order: true,
-          },
         },
       },
     });
@@ -322,15 +350,55 @@ export class TestsService {
       throw new NotFoundException('Test topilmadi');
     }
 
+    // ========== TEST KALITLARI (TO'G'RI JAVOBLAR) ==========
+    console.log('\n');
+    console.log('🔑'.repeat(50));
+    console.log(`📝 TEST: ${test.title}`);
+    console.log(`👤 User ID: ${userId} | ⏱️  ${test.maxDuration} daqiqa | 📊 O'tish: ${test.passingScore}%`);
+    console.log('🔑'.repeat(50));
+    console.log('\n📋 BARCHA TO\'G\'RI JAVOBLAR (100% UCHUN):');
+    console.log('═'.repeat(80));
+    
+    // Jadval header
+    console.log('┌─────┬─────────────────────────────────────────────┬────────────┐');
+    console.log('│  №  │              SAVOL                          │  JAVOB     │');
+    console.log('├─────┼─────────────────────────────────────────────┼────────────┤');
+    
+    test.questions.forEach((q, index) => {
+      const questionText = q.question.substring(0, 40).padEnd(40);
+      const answerNum = q.correctAnswer.toString().padStart(2);
+      console.log(`│ ${(index + 1).toString().padStart(3)} │ ${questionText}... │     ${answerNum}     │`);
+    });
+    
+    console.log('└─────┴─────────────────────────────────────────────┴────────────┘');
+    console.log('\n💡 100% natija uchun yuqoridagi javoblarni ishlating!\n');
+    console.log('═'.repeat(80));
+    console.log('\n🎯 REAL-TIME MONITORING:\n');
+
+    // Test'ni frontend uchun qaytarayotganda to'g'ri javoblarni olib tashlaymiz
+    const testForFrontend = {
+      ...test,
+      questions: test.questions.map(q => ({
+        id: q.id,
+        question: q.question,
+        options: q.options,
+        order: q.order,
+      })),
+    };
+
     // User kursga enrollment qilganmi tekshirish
     const enrollment = await this.prisma.enrollment.findFirst({
       where: {
         userId,
         courseId: test.courseId,
+        isActive: true,
       },
     });
 
-    if (!enrollment) {
+    // Birinchi test (availableAfterDays = 0 va ANYTIME) hamma uchun ochiq
+    const isFirstTestFree = test.availableAfterDays === 0 && test.availabilityType === 'ANYTIME';
+    
+    if (!enrollment && !isFirstTestFree) {
       throw new BadRequestException('Siz bu kursga yozilmagansiz');
     }
 
@@ -355,7 +423,7 @@ export class TestsService {
         // Aktiv session qaytaramiz
         return {
           sessionId: activeSession.id,
-          test,
+          test: testForFrontend,
           startedAt: activeSession.startedAt,
           expiresAt: activeSession.expiresAt,
           currentAnswers: JSON.parse(activeSession.currentAnswers || '{}'),
@@ -378,7 +446,7 @@ export class TestsService {
 
     return {
       sessionId: session.id,
-      test,
+      test: testForFrontend,
       startedAt: session.startedAt,
       expiresAt: session.expiresAt,
       currentAnswers: {},
@@ -425,6 +493,13 @@ export class TestsService {
     if (!question) {
       throw new BadRequestException('Savol topilmadi');
     }
+
+    // ========== JAVOB LOG ==========
+    const isCorrect = selectedAnswer === question.correctAnswer;
+    const status = isCorrect ? '✅ TO\'G\'RI' : '❌ NOTO\'G\'RI';
+    const emoji = isCorrect ? '🎉' : '❌';
+    
+    console.log(`${emoji} Savol #${question.order} | Tanlangan: ${selectedAnswer} | To'g'ri: ${question.correctAnswer} | ${status}`);
 
     // Javobni saqlash/yangilash
     await this.prisma.testSessionAnswer.upsert({
@@ -623,6 +698,7 @@ export class TestsService {
         userName: `${user.firstName || ''} ${user.surname || ''}`.trim() || 'User',
         courseName: course.title,
         teacherName: course.teacher?.name || 'Teacher',
+        testName: session.test.title,
         score,
         correctAnswers,
         totalQuestions,
@@ -695,13 +771,14 @@ export class TestsService {
     const fs = require('fs');
     const path = require('path');
 
-    const certificatesDir = path.join(__dirname, '..', '..', 'uploads', 'certificates');
+    // Use process.cwd() to get project root instead of __dirname
+    const certificatesDir = path.join(process.cwd(), 'uploads', 'certificates');
     if (!fs.existsSync(certificatesDir)) {
       fs.mkdirSync(certificatesDir, { recursive: true });
     }
 
     const pdfPath = path.join(certificatesDir, `${data.certificateNo}.pdf`);
-    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 50 });
+    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 0 });
     const stream = fs.createWriteStream(pdfPath);
 
     doc.pipe(stream);
@@ -710,101 +787,216 @@ export class TestsService {
     const pageWidth = 842;
     const pageHeight = 595;
 
-    // Border
-    doc.rect(30, 30, pageWidth - 60, pageHeight - 60)
-       .lineWidth(3)
-       .strokeColor('#1a73e8')
+    // Background gradient effect - light blue to white
+    doc.rect(0, 0, pageWidth, 150)
+       .fill('#E3F2FD');
+    
+    doc.rect(0, 150, pageWidth, 200)
+       .fill('#F5F5F5');
+    
+    doc.rect(0, 350, pageWidth, pageHeight - 350)
+       .fill('#FAFAFA');
+
+    // Decorative corner elements
+    // Top left corner
+    doc.circle(0, 0, 80)
+       .fill('#1976D2', 0.1);
+    
+    // Top right corner
+    doc.circle(pageWidth, 0, 80)
+       .fill('#1976D2', 0.1);
+    
+    // Bottom left corner
+    doc.circle(0, pageHeight, 80)
+       .fill('#1976D2', 0.1);
+    
+    // Bottom right corner
+    doc.circle(pageWidth, pageHeight, 80)
+       .fill('#1976D2', 0.1);
+
+    // Main border - double line
+    doc.rect(25, 25, pageWidth - 50, pageHeight - 50)
+       .lineWidth(4)
+       .strokeColor('#1976D2')
        .stroke();
 
-    doc.rect(40, 40, pageWidth - 80, pageHeight - 80)
+    doc.rect(35, 35, pageWidth - 70, pageHeight - 70)
+       .lineWidth(1.5)
+       .strokeColor('#64B5F6')
+       .stroke();
+
+    // Inner decorative line with pattern
+    doc.moveTo(60, 165)
+       .lineTo(pageWidth - 60, 165)
+       .lineWidth(2)
+       .strokeColor('#1976D2')
+       .stroke();
+    
+    doc.moveTo(60, 170)
+       .lineTo(pageWidth - 60, 170)
        .lineWidth(1)
-       .strokeColor('#1a73e8')
+       .strokeColor('#64B5F6')
        .stroke();
 
-    // Header
-    doc.fontSize(40)
-       .fillColor('#1a73e8')
+    // Trophy/Award icon using shapes
+    const iconX = pageWidth / 2;
+    const iconY = 75;
+    
+    // Trophy base
+    doc.circle(iconX, iconY, 20)
+       .fill('#FFD700');
+    
+    // Trophy cup
+    doc.polygon([iconX - 15, iconY + 15], [iconX + 15, iconY + 15], [iconX + 10, iconY + 30], [iconX - 10, iconY + 30])
+       .fill('#FFB700');
+    
+    // Star on trophy
+    doc.circle(iconX, iconY, 8)
+       .fill('#FFF');
+
+    // Header with shadow effect
+    doc.fontSize(49)
+       .fillColor('#1976D2')
        .font('Helvetica-Bold')
-       .text('CERTIFICATE', 0, 80, { align: 'center' });
+       .text('CERTIFICATE', 0, 108, { align: 'center' });
 
-    doc.fontSize(16)
-       .fillColor('#666')
-       .font('Helvetica')
-       .text('OF COMPLETION', 0, 135, { align: 'center' });
-
-    // "This is to certify that"
-    doc.fontSize(14)
-       .fillColor('#333')
-       .text('This is to certify that', 0, 190, { align: 'center' });
-
-    // User name
-    doc.fontSize(32)
-       .fillColor('#1a73e8')
+    doc.fontSize(18)
+       .fillColor('#424242')
        .font('Helvetica-Bold')
-       .text(data.userName, 0, 220, { align: 'center' });
+       .text('OF ACHIEVEMENT', 0, 152, { align: 'center' });
 
-    // "Has successfully completed"
-    doc.fontSize(14)
-       .fillColor('#333')
+    // Decorative separator line
+    doc.moveTo(pageWidth / 2 - 100, 185)
+       .lineTo(pageWidth / 2 + 100, 185)
+       .lineWidth(2)
+       .strokeColor('#1976D2')
+       .stroke();
+
+    // "This certifies that" in elegant font
+    doc.fontSize(13)
+       .fillColor('#616161')
+       .font('Helvetica-Oblique')
+       .text('This certifies that', 0, 205, { align: 'center' });
+
+    // User name with underline
+    const nameY = 230;
+    doc.fontSize(36)
+       .fillColor('#1976D2')
+       .font('Helvetica-Bold')
+       .text(data.userName.toUpperCase(), 0, nameY, { align: 'center' });
+    
+    // Underline for name
+    doc.moveTo(pageWidth / 2 - 200, nameY + 45)
+       .lineTo(pageWidth / 2 + 200, nameY + 45)
+       .lineWidth(2)
+       .strokeColor('#64B5F6')
+       .stroke();
+
+    // "Has successfully completed" 
+    doc.fontSize(13)
+       .fillColor('#616161')
        .font('Helvetica')
-       .text('has successfully completed', 0, 270, { align: 'center' });
+       .text('has successfully completed the course', 0, 290, { align: 'center' });
 
-    // Course name
+    // Course name in box
+    doc.roundedRect(pageWidth / 2 - 300, 315, 600, 45, 5)
+       .fill('#FFFFFF')
+       .stroke('#1976D2');
+    
     doc.fontSize(24)
-       .fillColor('#333')
+       .fillColor('#1976D2')
        .font('Helvetica-Bold')
-       .text(data.courseName, 0, 300, { align: 'center', width: pageWidth });
+       .text(data.courseName, 0, 327, { align: 'center', width: pageWidth });
 
-    // Score
-    doc.fontSize(16)
-       .fillColor('#555')
+    // Score badge
+    const badgeX = pageWidth / 2;
+    const badgeY = 390;
+    
+    doc.circle(badgeX, badgeY, 35)
+       .fill('#4CAF50');
+    
+    doc.fontSize(26)
+       .fillColor('#FFFFFF')
+       .font('Helvetica-Bold')
+       .text(`${data.score}%`, 0, badgeY - 13, { width: pageWidth, align: 'center' });
+    
+    doc.fontSize(12)
+       .fillColor('#616161')
        .font('Helvetica')
-       .text(
-         `with a score of ${data.correctAnswers}/${data.totalQuestions} (${data.score}%)`,
-         0,
-         345,
-         { align: 'center' }
-       );
+       .text(`Score: ${data.correctAnswers}/${data.totalQuestions} correct answers`, 0, 432, { align: 'center' });
+    
+    // Test name
+    doc.fontSize(11)
+       .fillColor('#9E9E9E')
+       .font('Helvetica-Oblique')
+       .text(`Test: ${data.testName || 'Course Assessment'}`, 0, 452, { align: 'center' });
 
-    // Date and Certificate No
-    const dateStr = data.date.toLocaleDateString('en-US', {
+    // Date and Certificate No in styled boxes
+    const dateString = data.date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
 
-    doc.fontSize(12)
-       .fillColor('#666')
-       .text(`Date: ${dateStr}`, 100, 450);
-
+    // Left side - Date
+    const leftBoxX = 80;
+    const boxY = 485;
+    
+    doc.roundedRect(leftBoxX, boxY, 180, 50, 3)
+       .lineWidth(1)
+       .strokeColor('#1976D2')
+       .stroke();
+    
     doc.fontSize(10)
-       .fillColor('#999')
-       .text(`Certificate No: ${data.certificateNo}`, 100, 470);
-
-    // Teacher signature
-    doc.fontSize(12)
-       .fillColor('#666')
-       .text('_____________________', pageWidth - 300, 430, { width: 200, align: 'center' });
-
-    doc.fontSize(11)
-       .fillColor('#333')
-       .font('Helvetica-Bold')
-       .text(data.teacherName, pageWidth - 300, 455, { width: 200, align: 'center' });
-
-    doc.fontSize(10)
-       .fillColor('#666')
+       .fillColor('#757575')
        .font('Helvetica')
-       .text('Course Instructor', pageWidth - 300, 475, { width: 200, align: 'center' });
+       .text('Issue Date', leftBoxX, boxY + 10, { width: 180, align: 'center' });
+    
+    doc.fontSize(12)
+       .fillColor('#1976D2')
+       .font('Helvetica-Bold')
+       .text(dateString, leftBoxX, boxY + 27, { width: 180, align: 'center' });
 
-    // Footer
+    // Right side - Teacher signature
+    const rightBoxX = pageWidth - 260;
+    
+    doc.roundedRect(rightBoxX, boxY, 180, 50, 3)
+       .lineWidth(1)
+       .strokeColor('#1976D2')
+       .stroke();
+    
+    // Signature line
+    doc.moveTo(rightBoxX + 30, boxY + 30)
+       .lineTo(rightBoxX + 150, boxY + 30)
+       .lineWidth(1)
+       .strokeColor('#1976D2')
+       .stroke();
+    
+    doc.fontSize(10)
+       .fillColor('#757575')
+       .font('Helvetica')
+       .text('Authorized By', rightBoxX, boxY + 10, { width: 180, align: 'center' });
+    
+    doc.fontSize(11)
+       .fillColor('#1976D2')
+       .font('Helvetica-Bold')
+       .text(data.teacherName, rightBoxX, boxY + 35, { width: 180, align: 'center' });
+
+    // Certificate number at bottom
     doc.fontSize(9)
-       .fillColor('#999')
-       .text(
-         'Verify this certificate at: https://yourplatform.com/certificates/' + data.certificateNo,
-         0,
-         pageHeight - 60,
-         { align: 'center' }
-       );
+       .fillColor('#9E9E9E')
+       .font('Helvetica')
+       .text(`Certificate ID: ${data.certificateNo}`, 0, pageHeight - 45, { align: 'center' });
+
+    // Watermark text - amber colored
+    doc.save();
+    doc.rotate(-45, { origin: [pageWidth / 2, pageHeight / 2] });
+    doc.fontSize(80)
+       .fillColor('#FFA726')
+       .fillOpacity(0.15)
+       .font('Helvetica-Bold')
+       .text('VERIFIED', pageWidth / 2 - 200, pageHeight / 2 - 40, { width: 400, align: 'center' });
+    doc.restore();
 
     doc.end();
 
@@ -872,16 +1064,65 @@ export class TestsService {
   }
 
   async downloadCertificate(certificateNo: string, res: any) {
+    const fs = require('fs');
+    const path = require('path');
+    
     const certificate = await this.prisma.certificate.findUnique({
       where: { certificateNo },
+      include: {
+        testResult: {
+          include: {
+            test: {
+              include: {
+                course: {
+                  select: {
+                    title: true,
+                    teacher: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            user: {
+              select: {
+                firstName: true,
+                surname: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    if (!certificate || !certificate.pdfUrl) {
-      throw new NotFoundException('Certificate PDF not found');
+    if (!certificate) {
+      throw new NotFoundException('Certificate not found');
     }
 
-    const path = require('path');
-    const filePath = path.join(__dirname, '..', '..', certificate.pdfUrl);
+    // Agar PDF mavjud bo'lmasa yoki file yo'q bo'lsa, generate qilamiz
+    let filePath = certificate.pdfUrl ? path.join(process.cwd(), certificate.pdfUrl) : null;
+    
+    if (!filePath || !fs.existsSync(filePath)) {
+      console.log('📄 PDF topilmadi, generatsiya qilinmoqda...');
+      
+      // PDF yaratish
+      const pdfUrl = await this.generateCertificatePDF(certificate.id, {
+        certificateNo: certificate.certificateNo,
+        userName: `${certificate.testResult.user.firstName || ''} ${certificate.testResult.user.surname || ''}`.trim() || 'User',
+        courseName: certificate.testResult.test.course.title,
+        teacherName: certificate.testResult.test.course.teacher?.name || 'Teacher',
+        testName: certificate.testResult.test.title,
+        score: certificate.testResult.score,
+        correctAnswers: certificate.testResult.correctAnswers,
+        totalQuestions: certificate.testResult.totalQuestions,
+        date: certificate.testResult.completedAt || new Date(),
+      });
+      
+      filePath = path.join(process.cwd(), pdfUrl);
+      console.log('✅ PDF muvaffaqiyatli yaratildi:', filePath);
+    }
     
     return res.download(filePath, `${certificateNo}.pdf`);
   }

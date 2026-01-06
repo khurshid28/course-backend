@@ -33,13 +33,13 @@ export class TestsController {
 
   @Get('course/:courseId')
   findByCourseId(@Param('courseId') courseId: string, @Request() req) {
-    return this.testsService.findByCourseId(+courseId, req.user.userId);
+    return this.testsService.findByCourseId(+courseId, req.user.id);
   }
 
   // Test session - boshlash
   @Post(':testId/start')
   async startTestSession(@Param('testId') testId: string, @Request() req) {
-    return this.testsService.startTestSession(+testId, req.user.userId);
+    return this.testsService.startTestSession(+testId, req.user.id);
   }
 
   // Har bir javobni yuborish (real-time)
@@ -49,19 +49,19 @@ export class TestsController {
     @Body() dto: SubmitAnswerDto,
     @Request() req,
   ) {
-    return this.testsService.submitAnswer(+sessionId, dto, req.user.userId);
+    return this.testsService.submitAnswer(+sessionId, dto, req.user.id);
   }
 
   // Session holatini olish
   @Get('session/:sessionId/status')
   async getSessionStatus(@Param('sessionId') sessionId: string, @Request() req) {
-    return this.testsService.getSessionStatus(+sessionId, req.user.userId);
+    return this.testsService.getSessionStatus(+sessionId, req.user.id);
   }
 
   // Test'ni tugatish va natija olish
   @Post('session/:sessionId/complete')
   async completeTest(@Param('sessionId') sessionId: string, @Request() req) {
-    return this.testsService.completeTest(+sessionId, req.user.userId);
+    return this.testsService.completeTest(+sessionId, req.user.id);
   }
 
   @Get(':id')
@@ -71,21 +71,20 @@ export class TestsController {
 
   @Post('submit')
   submitTest(@Request() req, @Body() submitTestDto: SubmitTestDto) {
-    return this.testsService.submitTest(req.user.userId, submitTestDto);
+    return this.testsService.submitTest(req.user.id, submitTestDto);
   }
 
   @Get('certificates/my')
   getUserCertificates(@Request() req) {
-    return this.testsService.getUserCertificates(req.user.userId);
+    return this.testsService.getUserCertificates(req.user.id);
   }
 
-  // Public - har kim ko'rishi mumkin
-  @Get('certificates/verify/:certificateNo')
-  verifyCertificate(@Param('certificateNo') certificateNo: string) {
-    return this.testsService.verifyCertificate(certificateNo);
+  @Get('results/my')
+  getUserTestResults(@Request() req) {
+    return this.testsService.getUserTestResults(req.user.id);
   }
 
-  // Certificate PDF download
+  // Certificate PDF download - specific route must be before generic :certificateNo
   @Get('certificates/download/:certificateNo')
   async downloadCertificate(
     @Param('certificateNo') certificateNo: string,
@@ -94,6 +93,13 @@ export class TestsController {
     return this.testsService.downloadCertificate(certificateNo, res);
   }
 
+  // Public - har kim ko'rishi mumkin
+  @Get('certificates/verify/:certificateNo')
+  verifyCertificate(@Param('certificateNo') certificateNo: string) {
+    return this.testsService.verifyCertificate(certificateNo);
+  }
+
+  // Generic route - must be last
   @Get('certificates/:certificateNo')
   getCertificate(@Param('certificateNo') certificateNo: string) {
     return this.testsService.getCertificate(certificateNo);

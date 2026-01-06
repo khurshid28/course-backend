@@ -430,6 +430,11 @@ async function main() {
   const videoUrl1 = copyVideoToUploads(sampleVideoPath1, 'sample-video.mp4');
   console.log(`📹 Course 1 Video URL: ${videoUrl1}`);
   
+  // Public sample videos for testing
+  const publicVideoUrl1 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+  const publicVideoUrl2 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4';
+  const publicVideoUrl3 = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+  
   const section1_1 = await prisma.section.create({
     data: {
       courseId: 1,
@@ -446,7 +451,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Kursga xush kelibsiz',
         description: 'Kursda nimalarni o\'rganishimiz va kurs haqida to\'liq ma\'lumot',
-        url: videoUrl1,
+        url: publicVideoUrl1,
         thumbnail: 'https://picsum.photos/seed/flutter1/400/250',
         duration: 360,
         size: BigInt(5510872), // ~5.25 MB
@@ -464,7 +469,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Flutter o\'rnatish',
         description: 'Flutter SDK ni kompyuterga o\'rnatish va sozlash',
-        url: videoUrl1,
+        url: publicVideoUrl2,
         thumbnail: 'https://picsum.photos/seed/flutter2/400/250',
         duration: 420,
         size: BigInt(7340032), // ~7 MB
@@ -481,7 +486,7 @@ async function main() {
         sectionId: section1_1.id,
         title: 'Birinchi Flutter ilovasi',
         description: 'Hello World ilovasi yaratish va ishga tushirish',
-        url: videoUrl1,
+        url: publicVideoUrl3,
         thumbnail: 'https://picsum.photos/seed/flutter3/400/250',
         duration: 540,
         size: BigInt(9437184), // ~9 MB

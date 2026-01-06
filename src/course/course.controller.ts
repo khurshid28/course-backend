@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateFeedbackDto } from './dto/course.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -57,6 +57,15 @@ export class CourseController {
     @GetUser('id') userId: number,
   ) {
     return this.courseService.rateCourse(userId, courseId, rating);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/rate')
+  deleteRating(
+    @Param('id', ParseIntPipe) courseId: number,
+    @GetUser('id') userId: number,
+  ) {
+    return this.courseService.deleteRating(userId, courseId);
   }
 
   @UseGuards(JwtAuthGuard)

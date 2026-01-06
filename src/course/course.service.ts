@@ -351,4 +351,40 @@ export class CourseService {
       userRating: rating?.rating || null,
     };
   }
+
+  async deleteRating(userId: number, courseId: number) {
+    // Delete user's rating
+    await this.prisma.courseRating.delete({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+
+    // Recalculate course's average rating
+    const ratings = await this.prisma.courseRating.findMany({
+      where: { courseId },
+    });
+
+    const totalRatings = ratings.length;
+    const averageRating = totalRatings > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings
+      : 0;
+
+    // Update course's rating
+    await this.prisma.course.update({
+      where: { id: courseId },
+      data: {
+        rating: averageRating,
+      },
+    });
+
+    return {
+      success: true,
+      averageRating,
+      totalRatings,
+    };
+  }
 }
