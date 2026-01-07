@@ -2,12 +2,14 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { SendCodeDto, VerifyCodeDto, CompleteProfileDto } from './dto/auth.dto';
+import { UploadService } from '../upload/upload.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private uploadService: UploadService,
   ) {}
 
   async sendCode(dto: SendCodeDto) {
@@ -110,6 +112,19 @@ export class AuthService {
   }
 
   async completeProfile(userId: number, dto: CompleteProfileDto) {
+    // Agar avatar URL bo'lsa, download qilib saqlash
+    let avatarUrl = dto.avatar;
+    if (dto.avatar && (dto.avatar.startsWith('http://') || dto.avatar.startsWith('https://'))) {
+      try {
+        const result = await this.uploadService.downloadImageFromUrl(dto.avatar, 'user');
+        avatarUrl = result.url;
+      } catch (error) {
+        console.error('Failed to download avatar:', error);
+        // Avatar yuklashda xatolik bo'lsa ham davom etamiz
+        avatarUrl = dto.avatar;
+      }
+    }
+
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -118,9 +133,12 @@ export class AuthService {
         email: dto.email,
         gender: dto.gender as any,
         region: dto.region as any,
-        avatar: dto.avatar,
+        avatar: avatarUrl,
       },
     });
+
+    // Create welcome notifications for new user
+    await this.createWelcomeNotifications(userId);
 
     const token = this.generateToken(user.id);
 
@@ -171,5 +189,49 @@ export class AuthService {
 
   private generateToken(userId: number): string {
     return this.jwtService.sign({ userId });
+  }
+
+  private async createWelcomeNotifications(userId: number) {
+    try {
+      await Promise.all([
+        this.prisma.notification.create({
+          data: {
+            userId,
+            title: 'Xush kelibsiz! 🎉',
+            message: 'Platformamizga xush kelibsiz! Eng yaxshi kurslarni o\'rganing va yangi ko\'nikmalar egallab oling.',
+            type: 'course',
+            icon: 'school',
+            link: '/courses',
+            isRead: false,
+          },
+        }),
+        this.prisma.notification.create({
+          data: {
+            userId,
+            title: 'Bepul kurslar sizni kutmoqda!',
+            message: 'Platformada ko\'plab bepul kurslar mavjud. Hoziroq boshlang!',
+            type: 'course',
+            icon: 'school',
+            link: '/courses',
+            isRead: false,
+          },
+        }),
+        this.prisma.notification.create({
+          data: {
+            userId,
+            title: 'Maxsus taklif! 💰',
+            message: 'Birinchi xaridingizda 20% chegirma! Faqat sizlar uchun.',
+            type: 'discount',
+            icon: 'discount',
+            link: '/courses',
+            isRead: false,
+          },
+        }),
+      ]);
+      console.log(`Created welcome notifications for user ${userId}`);
+    } catch (error) {
+      console.error('Failed to create welcome notifications:', error);
+      // Don't throw error, just log it
+    }
   }
 }

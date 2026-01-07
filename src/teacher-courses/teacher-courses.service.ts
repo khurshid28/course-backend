@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCourseByTeacherDto } from '../course/dto/create-course-by-teacher.dto';
+import { UploadService } from '../upload/upload.service';
 
 @Injectable()
 export class TeacherCoursesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private uploadService: UploadService,
+  ) {}
 
   async getTeacherCourses(userId: number) {
     // First check if user is a teacher
@@ -42,12 +46,26 @@ export class TeacherCoursesService {
       throw new ForbiddenException('Faqat o\'qituvchilar kurs yaratishi mumkin');
     }
 
-    const { categoryIds, ...courseData } = createCourseDto;
+    const { categoryIds, thumbnail, ...courseData } = createCourseDto;
+
+    // Agar thumbnail URL bo'lsa, download qilib saqlash
+    let thumbnailUrl = thumbnail;
+    if (thumbnail && (thumbnail.startsWith('http://') || thumbnail.startsWith('https://'))) {
+      try {
+        const result = await this.uploadService.downloadImageFromUrl(thumbnail, 'course');
+        thumbnailUrl = result.url;
+      } catch (error) {
+        console.error('Failed to download thumbnail:', error);
+        // Thumbnail yuklashda xatolik bo'lsa ham davom etamiz
+        thumbnailUrl = thumbnail;
+      }
+    }
 
     // Create course with main category
     const course = await this.prisma.course.create({
       data: {
         ...courseData,
+        thumbnail: thumbnailUrl,
         teacherId: teacher.id,
         isActive: true,
       },

@@ -72,6 +72,72 @@ export class UploadService {
     };
   }
 
+  async downloadImageFromUrl(url: string, folder: string = 'images'): Promise<any> {
+    try {
+      const https = require('https');
+      const http = require('http');
+      const fs = require('fs');
+      const path = require('path');
+
+      // Image faylni saqlash uchun papka
+      const uploadDir = `./uploads/${folder}`;
+      if (!existsSync(uploadDir)) {
+        mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // URL'dan original file name olish
+      const urlPath = new URL(url).pathname;
+      const originalName = path.basename(urlPath).replace(/[^a-zA-Z0-9.-]/g, '_') || 'image.jpg';
+      const filename = `${Date.now()}-${originalName}`;
+      const filePath = path.join(uploadDir, filename);
+
+      // URL'dan image yuklash
+      console.log('Downloading image from URL:', url);
+      const client = url.startsWith('https') ? https : http;
+
+      return new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(filePath);
+
+        const request = client.get(url, { timeout: 30000 }, (response) => {
+          if (response.statusCode !== 200) {
+            reject(new Error(`Failed to download: ${response.statusCode}`));
+            return;
+          }
+
+          response.pipe(file);
+
+          file.on('finish', () => {
+            file.close();
+            console.log('Download completed:', filePath);
+
+            // File size olish
+            const stats = fs.statSync(filePath);
+            const fileSize = stats.size;
+
+            resolve({
+              url: `/uploads/${folder}/${filename}`,
+              filename: filename,
+              size: fileSize,
+              sizeInMB: (fileSize / (1024 * 1024)).toFixed(2),
+            });
+          });
+        }).on('error', (err) => {
+          fs.unlink(filePath, () => {});
+          reject(err);
+        });
+
+        // Request timeout
+        request.on('timeout', () => {
+          request.destroy();
+          fs.unlink(filePath, () => {});
+          reject(new Error('Download timeout - server took too long to respond'));
+        });
+      });
+    } catch (error) {
+      throw new Error(`Failed to download image: ${error.message}`);
+    }
+  }
+
   async downloadVideoFromUrl(url: string, isFree: boolean = false): Promise<any> {
     try {
       const https = require('https');

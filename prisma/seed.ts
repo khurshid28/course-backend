@@ -1,8 +1,81 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as https from 'https';
+import * as http from 'http';
 
 const prisma = new PrismaClient();
+
+// Helper function to download image from URL and save to uploads directory
+async function downloadImage(url: string, folder: string = 'images'): Promise<string> {
+  try {
+    const uploadsDir = path.join(__dirname, '..', 'uploads', folder);
+    
+    // Create uploads directory if it doesn't exist
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    // Generate unique filename
+    const urlObj = new URL(url);
+    const extension = path.extname(urlObj.pathname) || '.jpg';
+    const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}${extension}`;
+    const filePath = path.join(uploadsDir, filename);
+
+    return new Promise((resolve, reject) => {
+      const makeRequest = (requestUrl: string, redirectCount = 0) => {
+        if (redirectCount > 5) {
+          reject(new Error('Too many redirects'));
+          return;
+        }
+
+        const client = requestUrl.startsWith('https') ? https : http;
+        const file = fs.createWriteStream(filePath);
+
+        client.get(requestUrl, { timeout: 30000 }, (response) => {
+          // Handle redirects (301, 302, 307, 308)
+          if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+            file.close();
+            fs.unlink(filePath, () => {});
+            console.log(`↪️  Following redirect to: ${response.headers.location}`);
+            makeRequest(response.headers.location, redirectCount + 1);
+            return;
+          }
+
+          if (response.statusCode !== 200) {
+            file.close();
+            fs.unlink(filePath, () => {});
+            reject(new Error(`Failed to download: ${response.statusCode}`));
+            return;
+          }
+
+          response.pipe(file);
+
+          file.on('finish', () => {
+            file.close();
+            console.log(`✅ Downloaded image: ${filename}`);
+            resolve(`/uploads/${folder}/${filename}`);
+          });
+
+          file.on('error', (err) => {
+            fs.unlink(filePath, () => {});
+            reject(err);
+          });
+        }).on('error', (err) => {
+          fs.unlink(filePath, () => {});
+          console.error(`❌ Failed to download image: ${err.message}`);
+          // Return original URL on error
+          resolve(url);
+        });
+      };
+
+      makeRequest(url);
+    });
+  } catch (error) {
+    console.error(`❌ Error downloading image: ${error}`);
+    return url; // Return original URL on error
+  }
+}
 
 // Helper function to copy video file to uploads directory
 function copyVideoToUploads(sourcePath: string, filename: string): string {
@@ -43,6 +116,53 @@ function getFileSize(filePath: string): bigint {
 
 async function main() {
   console.log('🌱 Starting seed...');
+
+  // Clear all existing data
+  console.log('🗑️  Clearing existing data...');
+  await prisma.certificate.deleteMany();
+  await prisma.testSessionAnswer.deleteMany();
+  await prisma.testSession.deleteMany();
+  await prisma.testResult.deleteMany();
+  await prisma.testQuestion.deleteMany();
+  await prisma.test.deleteMany();
+  await prisma.video.deleteMany();
+  await prisma.section.deleteMany();
+  await prisma.courseComment.deleteMany();
+  await prisma.courseRating.deleteMany();
+  await prisma.teacherRating.deleteMany();
+  await prisma.savedCourse.deleteMany();
+  await prisma.enrollment.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.promoCodeUsage.deleteMany();
+  await prisma.promoCode.deleteMany();
+  await prisma.courseFAQ.deleteMany();
+  await prisma.feedback.deleteMany();
+  await prisma.course.deleteMany();
+  await prisma.teacher.deleteMany();
+  await prisma.category.deleteMany();
+  await prisma.banner.deleteMany();
+  await prisma.verificationCode.deleteMany();
+  await prisma.user.deleteMany();
+  console.log('✅ All data cleared');
+
+  // Clear uploads directories
+  console.log('🗑️  Clearing uploads directories...');
+  const uploadFolders = ['teacher', 'course', 'images', 'videos', 'certificates'];
+  for (const folder of uploadFolders) {
+    const uploadDir = path.join(__dirname, '..', 'uploads', folder);
+    if (fs.existsSync(uploadDir)) {
+      const files = fs.readdirSync(uploadDir);
+      for (const file of files) {
+        // Skip .gitkeep files
+        if (file !== '.gitkeep') {
+          fs.unlinkSync(path.join(uploadDir, file));
+        }
+      }
+      console.log(`✅ Cleared ${folder} folder (${files.length - 1} files)`);
+    }
+  }
+  console.log('✅ All uploads cleared');
 
   // Create Categories
   console.log('Creating categories...');
@@ -102,6 +222,22 @@ async function main() {
 
   // Create Teachers
   console.log('Creating teachers...');
+  console.log('Downloading teacher avatars...');
+  const teacherAvatars = await Promise.all([
+    downloadImage('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop', 'teacher'),
+    downloadImage('https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=400&fit=crop', 'teacher'),
+  ]);
+
   const teachers = await Promise.all([
     prisma.teacher.upsert({
       where: { id: 1 },
@@ -111,7 +247,7 @@ async function main() {
         bio: '5 yillik tajribaga ega Flutter dasturchi. Google Developer Expert. 20+ mobil ilovalar yaratgan va 50+ startup loyihalarda ishtirok etgan. MIT dan kompyuter fanlari bo\'yicha magistr darajasi.',
         email: 'akmal@example.com',
         phone: '+998901234567',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[0],
         rating: 4.9,
         totalRatings: 2847,
         categories: 'Flutter,Mobile Development,Dart,Firebase',
@@ -125,7 +261,7 @@ async function main() {
         bio: 'Senior Backend Engineer @ Yandex. 8+ yillik tajriba. Mikroservislar, API Development, va Cloud Architecture bo\'yicha mutaxassis. 100+ mijozlarga backend yechimlar yaratgan.',
         email: 'dilshod@example.com',
         phone: '+998901234568',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[1],
         rating: 4.9,
         totalRatings: 3521,
         categories: 'Backend,Node.js,Python,API Development,AWS',
@@ -139,7 +275,7 @@ async function main() {
         bio: 'Lead UI/UX Designer @ EPAM. Adobe Certified Professional. 6+ yillik tajriba. 200+ loyihalarni dizayn qilgan. Awwwards va CSS Design Awards sovrindori.',
         email: 'nigora@example.com',
         phone: '+998901234569',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[2],
         rating: 4.8,
         totalRatings: 1986,
         categories: 'UI/UX Design,Figma,Adobe XD,Web Design',
@@ -153,7 +289,7 @@ async function main() {
         bio: 'Full Stack Developer va Startup Mentor. Y Combinator dasturida qatnashgan. React, Next.js, va zamonaviy web texnologiyalar bo\'yicha ekspert. 10+ muvaffaqiyatli startup yaratgan.',
         email: 'sardor@example.com',
         phone: '+998901234570',
-        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[3],
         rating: 4.9,
         totalRatings: 4123,
         categories: 'React,Next.js,Full Stack,JavaScript,TypeScript',
@@ -167,7 +303,7 @@ async function main() {
         bio: 'Data Science va Machine Learning Specialist @ Google AI. Stanford dan PhD darajasi. Kaggle Grandmaster. 30+ research papers nashr etgan.',
         email: 'malika@example.com',
         phone: '+998901234571',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[4],
         rating: 5.0,
         totalRatings: 1567,
         categories: 'Data Science,Machine Learning,Python,AI,Deep Learning',
@@ -181,7 +317,7 @@ async function main() {
         bio: 'DevOps Engineer @ Microsoft Azure. Kubernetes Certified Administrator. CI/CD pipelines va cloud infrastructure bo\'yicha 7+ yillik tajriba. 500+ server infratuzilmasini boshqargan.',
         email: 'javohir@example.com',
         phone: '+998901234572',
-        avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[5],
         rating: 4.8,
         totalRatings: 2234,
         categories: 'DevOps,Docker,Kubernetes,AWS,Azure,CI/CD',
@@ -195,7 +331,7 @@ async function main() {
         bio: 'Digital Marketing Strategist. Google va Meta Certified Trainer. 50+ brendlar bilan ishlagan. E-commerce va social media marketing bo\'yicha 9+ yillik tajriba.',
         email: 'dildora@example.com',
         phone: '+998901234573',
-        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[6],
         rating: 4.7,
         totalRatings: 3456,
         categories: 'Digital Marketing,SMM,SEO,Google Ads,Content Marketing',
@@ -209,7 +345,7 @@ async function main() {
         bio: 'iOS Developer @ Apple. Swift va SwiftUI bo\'yicha ekspert. 15+ AppStore Featured ilovalar yaratgan. WWDC Speaker va iOS community leader.',
         email: 'bobur@example.com',
         phone: '+998901234574',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[7],
         rating: 4.9,
         totalRatings: 1876,
         categories: 'iOS,Swift,SwiftUI,Mobile Development,Xcode',
@@ -223,7 +359,7 @@ async function main() {
         bio: 'Motion Designer va Video Editor. Adobe After Effects va Premiere Pro Certified. 1000+ kommersial videolar yaratgan. Netflix va Disney+ uchun ishlagan.',
         email: 'zilola@example.com',
         phone: '+998901234575',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[8],
         rating: 4.8,
         totalRatings: 2145,
         categories: 'Motion Design,Video Editing,After Effects,Premiere Pro,Animation',
@@ -237,7 +373,7 @@ async function main() {
         bio: 'Blockchain Developer va Smart Contract Auditor. Ethereum va Solana ecosystemda 5+ yillik tajriba. 20+ DeFi loyihalar yaratgan va $100M+ auditlarni o\'tkazgan.',
         email: 'rustam@example.com',
         phone: '+998901234576',
-        avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop',
+        avatar: teacherAvatars[9],
         rating: 4.9,
         totalRatings: 987,
         categories: 'Blockchain,Solidity,Web3,Smart Contracts,DeFi',
@@ -248,87 +384,59 @@ async function main() {
       update: {},
       create: {
         name: 'Shoira Karimova',
-        bio: 'English Language Expert. CELTA va DELTA sertifikatlari. 12+ yillik xalqaro tajriba. IELTS va TOEFL bo\'yicha mutaxassis. 3000+ talabalar IELTS 7+ ballga erishgan.',
+        bio: 'English Language Teacher va IELTS Trainer. Cambridge CELTA certified. 12+ yillik tajriba. 5000+ talabalarni IELTS 7+ ball olishga yordam bergan.',
         email: 'shoira@example.com',
         phone: '+998901234577',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        rating: 5.0,
-        totalRatings: 5432,
-        categories: 'English,IELTS,TOEFL,Academic English,Business English',
+        avatar: teacherAvatars[10],
+        rating: 4.9,
+        totalRatings: 3987,
+        categories: 'English,IELTS,Language Teaching,Communication Skills',
       },
     }),
     prisma.teacher.upsert({
       where: { id: 12 },
       update: {},
       create: {
-        name: 'Timur Safarov',
-        bio: 'Cybersecurity Expert @ Kaspersky Lab. CEH va OSCP sertifikatlari. Ethical hacking va penetration testing bo\'yicha 10+ yillik tajriba. 100+ kompaniyalarga security audit o\'tkazgan.',
-        email: 'timur@example.com',
+        name: 'Aziz Rahmonov',
+        bio: 'Game Developer @ Unity Technologies. 10+ yillik tajriba. 30+ mobil o\'yinlar yaratgan, ularning 5 tasi App Store Featured. Unity Certified Expert.',
+        email: 'aziz@example.com',
         phone: '+998901234578',
-        avatar: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=400&fit=crop',
-        rating: 4.9,
-        totalRatings: 1543,
-        categories: 'Cybersecurity,Ethical Hacking,Network Security,Penetration Testing',
+        avatar: teacherAvatars[11],
+        rating: 4.8,
+        totalRatings: 2678,
+        categories: 'Game Development,Unity,C#,2D/3D Games,Mobile Games',
       },
     }),
   ]);
   console.log(`✅ Created ${teachers.length} teachers`);
 
-  // Create Banners
-  console.log('Creating banners...');
-  const banners = await Promise.all([
-    prisma.banner.upsert({
-      where: { id: 1 },
-      update: {},
-      create: {
-        title: 'Flutter Development',
-        description: 'Zero dan professional darajagacha',
-        image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800',
-        link: '/courses/1',
-        order: 1,
-        isActive: true,
-      },
-    }),
-    prisma.banner.upsert({
-      where: { id: 2 },
-      update: {},
-      create: {
-        title: 'Backend Development',
-        description: 'NestJS bilan zamonaviy backend yarating',
-        image: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800',
-        link: '/courses/2',
-        order: 2,
-        isActive: true,
-      },
-    }),
-    prisma.banner.upsert({
-      where: { id: 3 },
-      update: {},
-      create: {
-        title: 'UI/UX Design',
-        description: 'Professional dizayner bo\'ling',
-        image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800',
-        link: '/courses/4',
-        order: 3,
-        isActive: true,
-      },
-    }),
-  ]);
-  console.log(`✅ Created ${banners.length} banners`);
-
   // Create Courses
   console.log('Creating courses...');
+  console.log('Downloading course thumbnails...');
+  const courseThumbnails = await Promise.all([
+    downloadImage('https://picsum.photos/seed/flutter/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/nestjs/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/python/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/design/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/react/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/flutter1/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/flutter2/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/flutter3/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/flutter4/400/250', 'course'),
+    downloadImage('https://picsum.photos/seed/flutter5/400/250', 'course'),
+  ]);
+
   const courses = await Promise.all([
     prisma.course.upsert({
       where: { id: 1 },
       update: {},
       create: {
-        teacherId: 1,
-        categoryId: 1,
+        teacherId: teachers[0].id,
+        categoryId: categories[0].id,
         title: 'Flutter Development',
         subtitle: 'Zero dan professional darajagacha',
         description: 'Bu kursda siz Flutter yordamida iOS va Android uchun mobil ilovalar yaratishni o\'rganasiz. Clean Architecture, BLoC, va ko\'plab amaliy loyihalar.',
-        thumbnail: 'https://picsum.photos/seed/flutter/400/250',
+        thumbnail: courseThumbnails[0],
         price: 250000,
         isFree: false,
         freeVideosCount: 3,
@@ -343,12 +451,12 @@ async function main() {
       where: { id: 2 },
       update: {},
       create: {
-        teacherId: 2,
-        categoryId: 1,
+        teacherId: teachers[1].id,
+        categoryId: categories[0].id,
         title: 'NestJS Backend Development',
         subtitle: 'Zamonaviy backend yaratish',
         description: 'NestJS framework yordamida professional backend API yaratishni o\'rganasiz. TypeScript, Prisma, PostgreSQL, JWT authentication.',
-        thumbnail: 'https://picsum.photos/seed/nestjs/400/250',
+        thumbnail: courseThumbnails[1],
         price: 300000,
         isFree: false,
         freeVideosCount: 2,
@@ -363,12 +471,12 @@ async function main() {
       where: { id: 3 },
       update: {},
       create: {
-        teacherId: 2,
-        categoryId: 1,
+        teacherId: teachers[1].id,
+        categoryId: categories[0].id,
         title: 'Python Foundation',
         subtitle: 'Dasturlashni o\'rganishni boshlang',
         description: 'Python tilida dasturlash asoslari. Variables, loops, functions, OOP va ko\'proq. Bepul kurs!',
-        thumbnail: 'https://picsum.photos/seed/python/400/250',
+        thumbnail: courseThumbnails[2],
         price: 0,
         isFree: true,
         freeVideosCount: 15,
@@ -383,12 +491,12 @@ async function main() {
       where: { id: 4 },
       update: {},
       create: {
-        teacherId: 3,
-        categoryId: 2,
+        teacherId: teachers[2].id,
+        categoryId: categories[1].id,
         title: 'UI/UX Design Masterclass',
         subtitle: 'Figma va Adobe XD bilan dizayn',
         description: 'Zamonaviy mobil va web dizayn yaratishni o\'rganasiz. User research, wireframing, prototyping, va final design.',
-        thumbnail: 'https://picsum.photos/seed/design/400/250',
+        thumbnail: courseThumbnails[3],
         price: 200000,
         isFree: false,
         freeVideosCount: 4,
@@ -403,12 +511,12 @@ async function main() {
       where: { id: 5 },
       update: {},
       create: {
-        teacherId: 1,
-        categoryId: 1,
+        teacherId: teachers[0].id,
+        categoryId: categories[0].id,
         title: 'React Native Complete Guide',
         subtitle: 'Cross-platform mobile development',
         description: 'React Native orqali iOS va Android uchun mobil ilovalar yarating. Expo, Navigation, Redux, va ko\'proq.',
-        thumbnail: 'https://picsum.photos/seed/react/400/250',
+        thumbnail: courseThumbnails[4],
         price: 280000,
         isFree: false,
         freeVideosCount: 2,
@@ -421,6 +529,48 @@ async function main() {
     }),
   ]);
   console.log(`✅ Created ${courses.length} courses`);
+
+  // Create Banners (after courses so we can reference course IDs)
+  console.log('Creating banners...');
+  const banners = await Promise.all([
+    prisma.banner.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        title: 'Flutter Development',
+        description: 'Zero dan professional darajagacha',
+        image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800',
+        link: `/courses/${courses[0].id}`,
+        order: 1,
+        isActive: true,
+      },
+    }),
+    prisma.banner.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        title: 'Backend Development',
+        description: 'NestJS bilan zamonaviy backend yarating',
+        image: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800',
+        link: `/courses/${courses[1].id}`,
+        order: 2,
+        isActive: true,
+      },
+    }),
+    prisma.banner.upsert({
+      where: { id: 3 },
+      update: {},
+      create: {
+        title: 'UI/UX Design',
+        description: 'Professional dizayner bo\'ling',
+        image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800',
+        link: `/courses/${courses[3].id}`,
+        order: 3,
+        isActive: true,
+      },
+    }),
+  ]);
+  console.log(`✅ Created ${banners.length} banners`);
 
   // Create Sections and Videos for Course 1 (Flutter Development)
   console.log('Creating sections and videos for Flutter course...');
@@ -439,7 +589,7 @@ async function main() {
   
   const section1_1 = await prisma.section.create({
     data: {
-      courseId: 1,
+      courseId: courses[0].id,
       title: 'Boshlang\'ich: Flutter asoslari',
       description: 'Flutter bilan tanishish va asosiy konseptlar',
       order: 1,
@@ -449,12 +599,12 @@ async function main() {
   await Promise.all([
     prisma.video.create({
       data: {
-        courseId: 1,
+        courseId: courses[0].id,
         sectionId: section1_1.id,
         title: 'Kursga xush kelibsiz',
         description: 'Kursda nimalarni o\'rganishimiz va kurs haqida to\'liq ma\'lumot',
         url: video1,
-        thumbnail: 'https://picsum.photos/seed/flutter1/400/250',
+        thumbnail: courseThumbnails[5],
         duration: 360,
         size: BigInt(5510872), // ~5.25 MB
         order: 1,
@@ -467,12 +617,12 @@ async function main() {
     }),
     prisma.video.create({
       data: {
-        courseId: 1,
+        courseId: courses[0].id,
         sectionId: section1_1.id,
         title: 'Flutter o\'rnatish',
         description: 'Flutter SDK ni kompyuterga o\'rnatish va sozlash',
         url: video2,
-        thumbnail: 'https://picsum.photos/seed/flutter2/400/250',
+        thumbnail: courseThumbnails[6],
         duration: 420,
         size: BigInt(7340032), // ~7 MB
         order: 2,
@@ -484,12 +634,12 @@ async function main() {
     }),
     prisma.video.create({
       data: {
-        courseId: 1,
+        courseId: courses[0].id,
         sectionId: section1_1.id,
         title: 'Birinchi Flutter ilovasi',
         description: 'Hello World ilovasi yaratish va ishga tushirish',
         url: video3,
-        thumbnail: 'https://picsum.photos/seed/flutter3/400/250',
+        thumbnail: courseThumbnails[7],
         duration: 540,
         size: BigInt(9437184), // ~9 MB
         order: 3,
@@ -500,7 +650,7 @@ async function main() {
 
   const section1_2 = await prisma.section.create({
     data: {
-      courseId: 1,
+      courseId: courses[0].id,
       title: 'Widgetlar va Layout',
       description: 'Flutter widgetlari bilan ishlash',
       order: 2,
@@ -510,12 +660,12 @@ async function main() {
   await Promise.all([
     prisma.video.create({
       data: {
-        courseId: 1,
+        courseId: courses[0].id,
         sectionId: section1_2.id,
         title: 'Stateless va Stateful Widgetlar',
         description: 'Widget turlari va ularning farqlari',
         url: video4,
-        thumbnail: 'https://picsum.photos/seed/flutter4/400/250',
+        thumbnail: courseThumbnails[8],
         duration: 720,
         size: BigInt(12582912), // ~12 MB
         order: 1,
@@ -529,12 +679,12 @@ async function main() {
     }),
     prisma.video.create({
       data: {
-        courseId: 1,
+        courseId: courses[0].id,
         sectionId: section1_2.id,
         title: 'Layout Widgetlari',
         description: 'Row, Column, Stack va boshqa layout widgetlar',
         url: video5,
-        thumbnail: 'https://picsum.photos/seed/flutter5/400/250',
+        thumbnail: courseThumbnails[9],
         duration: 680,
         order: 2,
         isFree: false,
@@ -547,7 +697,7 @@ async function main() {
   console.log('Creating tests for Flutter course...');
   const test1_1 = await prisma.test.create({
     data: {
-      courseId: 1,
+      courseId: courses[0].id,
       title: 'Flutter Asoslari - Boshlang\'ich Test',
       description: 'Kurs sotib olingandan keyin darhol topshirish mumkin',
       duration: 20,
@@ -561,7 +711,7 @@ async function main() {
 
   const test1_2 = await prisma.test.create({
     data: {
-      courseId: 1,
+      courseId: courses[0].id,
       title: 'Flutter O\'rta Daraja - Haftalik Test',
       description: 'Kurs sotib olingandan 7 kun o\'tgach, har haftada topshirish mumkin',
       duration: 30,
@@ -575,7 +725,7 @@ async function main() {
 
   const test1_3 = await prisma.test.create({
     data: {
-      courseId: 1,
+      courseId: courses[0].id,
       title: 'Flutter Final Test',
       description: 'Kurs sotib olingandan 14 kun o\'tgach, har 3 kunda topshirish mumkin',
       duration: 45,
@@ -704,7 +854,7 @@ async function main() {
   await Promise.all([
     prisma.courseFAQ.create({
       data: {
-        courseId: 1,
+        courseId: courses[0].id,
         question: 'Bu kursdan nma foyda?',
         answer: 'Siz Flutter yordamida professional mobil ilovalar yaratishni o\'rganasiz. iOS va Android uchun bitta kod bilan ilova yaratish, Clean Architecture, State Management va ko\'plab amaliy loyihalar.',
         order: 1,
@@ -712,7 +862,7 @@ async function main() {
     }),
     prisma.courseFAQ.create({
       data: {
-        courseId: 1,
+        courseId: courses[0].id,
         question: 'Flutter developer bo\'lish uchun qancha vaqt kerak?',
         answer: 'Agar har kuni 2-3 soat mashq qilsangiz, 3-6 oy ichida junior Flutter developer bo\'lishingiz mumkin. Bu kurs sizga kerakli barcha bilimlarni beradi.',
         order: 2,
@@ -720,7 +870,7 @@ async function main() {
     }),
     prisma.courseFAQ.create({
       data: {
-        courseId: 1,
+        courseId: courses[0].id,
         question: 'Kursda qanday loyihalar yasaymiz?',
         answer: 'To\'rt katta loyiha: E-commerce ilova, Chat messenger, Weather app, va Portfolio website. Har bir loyiha real dunyo ilovalarining namunasi.',
         order: 3,
@@ -733,7 +883,7 @@ async function main() {
   console.log('Creating tests for NestJS course...');
   const test2_1 = await prisma.test.create({
     data: {
-      courseId: 2,
+      courseId: courses[1].id,
       title: 'NestJS Asoslari - Katta Test',
       description: '30 savollik to\'liq test',
       duration: 45,
@@ -747,7 +897,7 @@ async function main() {
 
   const test2_2 = await prisma.test.create({
     data: {
-      courseId: 2,
+      courseId: courses[1].id,
       title: 'NestJS O\'rta Daraja - Test',
       description: '20 savollik o\'rta daraja test',
       duration: 30,
@@ -879,26 +1029,26 @@ async function main() {
       where: {
         userId_courseId: {
           userId: testUser.id,
-          courseId: 1,
+          courseId: courses[0].id,
         },
       },
       update: {},
       create: {
         userId: testUser.id,
-        courseId: 1,
+        courseId: courses[0].id,
       },
     }),
     prisma.enrollment.upsert({
       where: {
         userId_courseId: {
           userId: testUser.id,
-          courseId: 3,
+          courseId: courses[2].id,
         },
       },
       update: {},
       create: {
         userId: testUser.id,
-        courseId: 3,
+        courseId: courses[2].id,
       },
     }),
   ]);
@@ -911,13 +1061,13 @@ async function main() {
       where: {
         userId_courseId: {
           userId: testUser.id,
-          courseId: 1,
+          courseId: courses[0].id,
         },
       },
       update: {},
       create: {
         userId: testUser.id,
-        courseId: 1,
+        courseId: courses[0].id,
         rating: 5,
         comment: 'Juda zo\'r kurs! Hammaga tavsiya qilaman.',
       },
@@ -925,13 +1075,16 @@ async function main() {
   ]);
   console.log('✅ Created test feedbacks');
 
+  // Teacher ratings are now real-time only, no mock data
+  console.log('✅ Skipping mock teacher ratings - will be real-time from users');
+
   // Create Comments for Course 1
   console.log('Creating course comments...');
   await Promise.all([
     prisma.courseComment.create({
       data: {
         userId: testUser.id,
-        courseId: 1,
+        courseId: courses[0].id,
         comment: 'Juda zo\'r kurs! Barcha narsani tushuntirib berishdi. Rahmat!',
         rating: 5,
         screenshots: JSON.stringify([
@@ -942,7 +1095,7 @@ async function main() {
     prisma.courseComment.create({
       data: {
         userId: testUser.id,
-        courseId: 1,
+        courseId: courses[0].id,
         comment: 'Videolar juda sifatli. Amaliy loyihalar katta yordam berdi.',
         rating: 5,
       },
@@ -1052,7 +1205,7 @@ async function main() {
     prisma.payment.create({
       data: {
         userId: testUser.id,
-        courseId: 1,
+        courseId: courses[0].id,
         amount: 250000,
         method: 'BALANCE',
         type: 'COURSE_PURCHASE',
@@ -1064,7 +1217,7 @@ async function main() {
     prisma.payment.create({
       data: {
         userId: testUser.id,
-        courseId: 2,
+        courseId: courses[1].id,
         amount: 300000,
         method: 'PAYME',
         type: 'COURSE_PURCHASE',
@@ -1076,7 +1229,7 @@ async function main() {
     prisma.payment.create({
       data: {
         userId: testUser.id,
-        courseId: 3,
+        courseId: courses[2].id,
         amount: 200000,
         method: 'UZUM',
         type: 'COURSE_PURCHASE',

@@ -9,6 +9,21 @@ export class TeacherService {
     return this.prisma.teacher.findMany({
       where: { isActive: true },
       include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            surname: true,
+            avatar: true,
+          },
+        },
+        courses: {
+          select: {
+            id: true,
+            categoryId: true,
+            title: true,
+          },
+        },
         _count: {
           select: { courses: true },
         },

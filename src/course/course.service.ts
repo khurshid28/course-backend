@@ -279,6 +279,19 @@ export class CourseService {
       throw new NotFoundException('Course not found');
     }
 
+    // Check if user has enrolled in the course OR if the course is free
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: {
+        userId,
+        courseId,
+      },
+    });
+
+    // Allow rating if enrolled OR if course is free
+    if (!enrollment && !course.isFree) {
+      throw new BadRequestException('Siz bu kursni sotib olmagansiz. Faqat sotib olingan yoki bepul kurslarni baholash mumkin.');
+    }
+
     // Upsert user rating
     const existingRating = await this.prisma.courseRating.findUnique({
       where: {
@@ -348,6 +361,7 @@ export class CourseService {
     });
 
     return {
+      rating: rating?.rating || null,
       userRating: rating?.rating || null,
     };
   }

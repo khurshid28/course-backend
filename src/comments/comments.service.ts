@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { UploadService } from '../upload/upload.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private uploadService: UploadService,
+  ) {}
 
   async create(userId: number, createCommentDto: CreateCommentDto) {
     const { courseId, comment, rating, images, screenshots } = createCommentDto;
@@ -16,13 +20,32 @@ export class CommentsService {
         throw new Error(`Invalid data: userId=${userId}, courseId=${courseId}`);
       }
 
+      // Rasmlar URL bo'lsa, download qilib saqlash
+      let processedImages = images || [];
+      if (images && images.length > 0) {
+        processedImages = await Promise.all(
+          images.map(async (imageUrl) => {
+            if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+              try {
+                const result = await this.uploadService.downloadImageFromUrl(imageUrl, 'images');
+                return result.url;
+              } catch (error) {
+                console.error('Failed to download image:', error);
+                return imageUrl;
+              }
+            }
+            return imageUrl;
+          })
+        );
+      }
+
       const result = await this.prisma.courseComment.create({
         data: {
           userId,
           courseId,
           comment,
           rating: rating && rating > 0 ? rating : null,
-          images: images && images.length > 0 ? JSON.stringify(images) : null,
+          images: processedImages && processedImages.length > 0 ? JSON.stringify(processedImages) : null,
           screenshots: screenshots && screenshots.length > 0 ? JSON.stringify(screenshots) : null,
         },
         include: {

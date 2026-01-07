@@ -23,6 +23,15 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
+  create(@Request() req, @Body() createCommentDto: CreateCommentDto) {
+    console.log('Creating comment with data:', {
+      userId: req.user?.id,
+      dto: createCommentDto,
+    });
+    return this.commentsService.create(req.user.id, createCommentDto);
+  }
+
+  @Post('legacy')
   @UseInterceptors(
     FilesInterceptor('images', 5, {
       storage: diskStorage({
@@ -41,7 +50,7 @@ export class CommentsController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     }),
   )
-  create(
+  createLegacy(
     @Request() req,
     @Body() createCommentDto: CreateCommentDto,
     @UploadedFiles() files: Express.Multer.File[],

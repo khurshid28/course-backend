@@ -39,6 +39,20 @@ export class UploadController {
     };
   }
 
+  @Post('image-from-url')
+  async uploadImageFromUrl(
+    @Body('url') url: string,
+    @Body('folder') folder?: string,
+  ) {
+    if (!url) {
+      throw new Error('URL is required');
+    }
+
+    const folderPath = folder || 'images';
+    const result = await this.uploadService.downloadImageFromUrl(url, folderPath);
+    return result;
+  }
+
   @Post('video-from-url')
   async uploadVideoFromUrl(
     @Body('url') url: string,
