@@ -35,6 +35,10 @@ export class CompleteProfileDto {
   @IsEnum(['MALE', 'FEMALE'])
   gender: 'MALE' | 'FEMALE';
 
+  @IsOptional()
+  @IsString()
+  dateOfBirth?: string;
+
   @IsNotEmpty()
   @IsEnum([
     'TOSHKENT_SHAHAR',
