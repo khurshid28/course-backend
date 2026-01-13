@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/payment.dto';
+import { TopupBalanceDto } from './dto/topup-balance.dto';
 import { ValidatePromoCodeDto } from './dto/promo-code.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { GetUser } from '../auth/get-user.decorator';
@@ -26,7 +27,7 @@ export class PaymentController {
   }
 
   @Post('topup')
-  topupBalance(@GetUser('id') userId: number, @Body() dto: { amount: number; method: string }) {
+  topupBalance(@GetUser('id') userId: number, @Body() dto: TopupBalanceDto) {
     return this.paymentService.topupBalance(userId, dto.amount, dto.method);
   }
 
