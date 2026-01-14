@@ -119,11 +119,18 @@ export class CourseService {
     let isEnrolled = false;
     let isSaved = false;
     let userFeedback = null;
+    let enrollment = null;
 
     if (userId) {
-      const enrollment = await this.prisma.enrollment.findUnique({
+      enrollment = await this.prisma.enrollment.findUnique({
         where: {
           userId_courseId: { userId, courseId: id },
+        },
+        select: {
+          id: true,
+          subscriptionDuration: true,
+          enrolledAt: true,
+          expiresAt: true,
         },
       });
       isEnrolled = !!enrollment;
@@ -147,6 +154,7 @@ export class CourseService {
       isEnrolled,
       isSaved,
       userFeedback,
+      enrollment,
     };
   }
 

@@ -32,16 +32,36 @@ export class TeacherService {
   }
 
   async getTeacherById(id: number) {
-    return this.prisma.teacher.findUnique({
+    const teacher = await this.prisma.teacher.findUnique({
       where: { id },
       include: {
         courses: {
           include: {
             category: true,
+            _count: {
+              select: {
+                enrollments: true,
+              },
+            },
           },
         },
       },
     });
+
+    if (!teacher) {
+      return null;
+    }
+
+    // Calculate total students (sum of all enrollments across all courses)
+    const totalStudents = teacher.courses.reduce(
+      (sum, course) => sum + (course._count?.enrollments || 0),
+      0,
+    );
+
+    return {
+      ...teacher,
+      totalStudents,
+    };
   }
 
   async rateTeacher(userId: number, teacherId: number, rating: number) {

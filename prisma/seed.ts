@@ -876,8 +876,42 @@ async function main() {
         order: 3,
       },
     }),
+    // FAQs for Course 2 (NestJS)
+    prisma.courseFAQ.create({
+      data: {
+        courseId: courses[1].id,
+        question: 'NestJS nima va nima uchun o\'rganish kerak?',
+        answer: 'NestJS - bu Node.js uchun progressive framework. TypeScript bilan ishlaydi, modulli arxitekturaga ega va enterprise darajadagi backend ilovalar yaratish uchun eng yaxshi tanlovlardan biri.',
+        order: 1,
+      },
+    }),
+    prisma.courseFAQ.create({
+      data: {
+        courseId: courses[1].id,
+        question: 'Bu kursda nimalarni o\'rganaman?',
+        answer: 'REST API yaratish, PostgreSQL bilan ishlash, Authentication va Authorization, Real-time chat WebSocket bilan, File upload, va production-ready backend yaratish.',
+        order: 2,
+      },
+    }),
+    // FAQs for Course 3 (Poligrafia)
+    prisma.courseFAQ.create({
+      data: {
+        courseId: courses[2].id,
+        question: 'Grafik dizayndan tushuncham yo\'q, bu kursni o\'rganolaymanmi?',
+        answer: 'Ha, albatta! Bu kurs noldan boshlanadi. Siz Adobe Photoshop va Illustrator dasturlarini o\'rganasiz, ranglar nazariyasi, kompozitsiya va professional dizayn yaratish ko\'nikmalarini egallaysiz.',
+        order: 1,
+      },
+    }),
+    prisma.courseFAQ.create({
+      data: {
+        courseId: courses[2].id,
+        question: 'Kurs tugagach qanday ish topishim mumkin?',
+        answer: 'Grafik dizayner, Branding specialist, Social media designer, Freelance designer sifatida ishlay olasiz. Shuningdek, o\'zingizning dizayn studiyangizni ochishingiz mumkin.',
+        order: 2,
+      },
+    }),
   ]);
-  console.log('✅ Created FAQs');
+  console.log('✅ Created FAQs for all courses');
 
   // Create Tests for Course 2 (NestJS - 30 va 20 savollik testlar)
   console.log('Creating tests for NestJS course...');
