@@ -103,6 +103,7 @@ model User {
 
   @@index([phone])
   @@index([email])
+  @@map("user")
 }
 
 model VerificationCode {
@@ -117,6 +118,7 @@ model VerificationCode {
 
   @@index([userId])
   @@index([code])
+  @@map("verificationcode")
 }
 
 model Teacher {
@@ -140,6 +142,7 @@ model Teacher {
 
   @@index([email])
   @@index([userId])
+  @@map("teacher")
 }
 
 model Category {
@@ -154,6 +157,7 @@ model Category {
   courses     Course[]
 
   @@index([name])
+  @@map("category")
 }
 
 model Course {
@@ -194,6 +198,7 @@ model Course {
   @@index([teacherId])
   @@index([categoryId])
   @@index([title])
+  @@map("course")
 }
 
 model Section {
@@ -212,6 +217,7 @@ model Section {
 
   @@index([courseId])
   @@index([order])
+  @@map("section")
 }
 
 model Video {
@@ -238,6 +244,7 @@ model Video {
   @@index([courseId])
   @@index([sectionId])
   @@index([order])
+  @@map("video")
 }
 
 model Test {
@@ -261,6 +268,7 @@ model Test {
   sessions              TestSession[]
 
   @@index([courseId])
+  @@map("test")
 }
 
 model TestQuestion {
@@ -276,6 +284,7 @@ model TestQuestion {
   sessionAnswers TestSessionAnswer[]
 
   @@index([testId])
+  @@map("testquestion")
 }
 
 model TestSession {
@@ -296,6 +305,7 @@ model TestSession {
   @@index([userId])
   @@index([testId])
   @@index([isExpired])
+  @@map("testsession")
 }
 
 model TestSessionAnswer {
@@ -311,6 +321,7 @@ model TestSessionAnswer {
   @@unique([sessionId, questionId]) // Har bir savolga faqat 1 marta javob
   @@index([sessionId])
   @@index([questionId])
+  @@map("testsessionanswer")
 }
 
 model TestResult {
@@ -330,6 +341,7 @@ model TestResult {
 
   @@index([userId])
   @@index([testId])
+  @@map("testresult")
 }
 
 model Certificate {
@@ -346,6 +358,7 @@ model Certificate {
 
   @@index([userId])
   @@index([certificateNo])
+  @@map("certificate")
 }
 
 model CourseFAQ {
@@ -359,6 +372,7 @@ model CourseFAQ {
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
+  @@map("coursefaq")
 }
 
 model CourseComment {
@@ -379,6 +393,7 @@ model CourseComment {
   @@index([userId])
   @@index([courseId])
   @@index([createdAt])
+  @@map("coursecomment")
 }
 
 model Enrollment {
@@ -398,6 +413,7 @@ model Enrollment {
   @@index([courseId])
   @@index([expiresAt])
   @@index([isActive])
+  @@map("enrollment")
 }
 
 model Feedback {
@@ -416,6 +432,7 @@ model Feedback {
   @@index([userId])
   @@index([courseId])
   @@index([rating])
+  @@map("feedback")
 }
 
 model SavedCourse {
@@ -430,6 +447,7 @@ model SavedCourse {
   @@unique([userId, courseId])
   @@index([userId])
   @@index([courseId])
+  @@map("savedcourse")
 }
 
 model Banner {
@@ -448,6 +466,7 @@ model Banner {
 
   @@index([isActive])
   @@index([courseId])
+  @@map("banner")
 }
 
 model Notification {
@@ -467,6 +486,7 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+  @@map("notification")
 }
 
 model PromoCode {
@@ -488,6 +508,7 @@ model PromoCode {
   @@index([code])
   @@index([isActive])
   @@index([expiresAt])
+  @@map("promocode")
 }
 
 model PromoCodeUsage {
@@ -506,6 +527,7 @@ model PromoCodeUsage {
   @@index([userId])
   @@index([promoCodeId])
   @@index([courseId])
+  @@map("promocodeusage")
 }
 
 model Payment {
@@ -535,6 +557,7 @@ model Payment {
   @@index([transactionId])
   @@index([status])
   @@index([type])
+  @@map("payment")
 }
 
 model TeacherRating {
@@ -552,6 +575,7 @@ model TeacherRating {
   @@index([userId])
   @@index([teacherId])
   @@index([rating])
+  @@map("teacherrating")
 }
 
 model CourseRating {
@@ -569,4 +593,5 @@ model CourseRating {
   @@index([userId])
   @@index([courseId])
   @@index([rating])
+  @@map("courserating")
 }
