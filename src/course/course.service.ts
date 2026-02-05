@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateCourseDto, CreateFeedbackDto } from './dto/course.dto';
+import { CreateCourseDto, CreateFeedbackDto, UpdateCourseDto } from './dto/course.dto';
 
 @Injectable()
 export class CourseService {
@@ -408,5 +408,81 @@ export class CourseService {
       averageRating,
       totalRatings,
     };
+  }
+
+  async createCourse(createCourseDto: CreateCourseDto) {
+    // Check if teacher exists
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { id: createCourseDto.teacherId },
+    });
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with ID ${createCourseDto.teacherId} not found`);
+    }
+
+    // Check if category exists
+    const category = await this.prisma.category.findUnique({
+      where: { id: createCourseDto.categoryId },
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${createCourseDto.categoryId} not found`);
+    }
+
+    return this.prisma.course.create({
+      data: {
+        ...createCourseDto,
+        isActive: true,
+      },
+      include: {
+        teacher: true,
+        category: true,
+      },
+    });
+  }
+
+  async updateCourse(id: number, updateCourseDto: UpdateCourseDto) {
+    const course = await this.prisma.course.findUnique({ where: { id } });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
+    }
+
+    // If updating teacherId, check if teacher exists
+    if (updateCourseDto.teacherId) {
+      const teacher = await this.prisma.teacher.findUnique({
+        where: { id: updateCourseDto.teacherId },
+      });
+      if (!teacher) {
+        throw new NotFoundException(`Teacher with ID ${updateCourseDto.teacherId} not found`);
+      }
+    }
+
+    // If updating categoryId, check if category exists
+    if (updateCourseDto.categoryId) {
+      const category = await this.prisma.category.findUnique({
+        where: { id: updateCourseDto.categoryId },
+      });
+      if (!category) {
+        throw new NotFoundException(`Category with ID ${updateCourseDto.categoryId} not found`);
+      }
+    }
+
+    return this.prisma.course.update({
+      where: { id },
+      data: updateCourseDto,
+      include: {
+        teacher: true,
+        category: true,
+      },
+    });
+  }
+
+  async deleteCourse(id: number) {
+    const course = await this.prisma.course.findUnique({ where: { id } });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
+    }
+
+    return this.prisma.course.delete({ where: { id } });
   }
 }

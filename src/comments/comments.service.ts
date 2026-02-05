@@ -10,6 +10,36 @@ export class CommentsService {
     private uploadService: UploadService,
   ) {}
 
+  async findAll() {
+    return this.prisma.courseComment.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            surname: true,
+            phone: true,
+            avatar: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            teacher: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async create(userId: number, createCommentDto: CreateCommentDto) {
     const { courseId, comment, rating, images, screenshots } = createCommentDto;
 

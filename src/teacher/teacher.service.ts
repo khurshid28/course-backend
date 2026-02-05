@@ -1,13 +1,13 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateTeacherDto, UpdateTeacherDto } from './dto/teacher.dto';
 
 @Injectable()
 export class TeacherService {
   constructor(private prisma: PrismaService) {}
 
   async getAllTeachers() {
-    return this.prisma.teacher.findMany({
-      where: { isActive: true },
+    return this.prisma.teacher.findMany({      
       include: {
         user: {
           select: {
@@ -28,6 +28,7 @@ export class TeacherService {
           select: { courses: true },
         },
       },
+      orderBy: { id: 'desc' },
     });
   }
 
@@ -151,5 +152,35 @@ export class TeacherService {
     return {
       userRating: rating?.rating || null,
     };
+  }
+
+  async createTeacher(createTeacherDto: CreateTeacherDto) {
+    return this.prisma.teacher.create({
+      data: {
+        ...createTeacherDto,
+        isActive: createTeacherDto.isActive ?? true,
+      },
+    });
+  }
+
+  async updateTeacher(id: number, updateTeacherDto: UpdateTeacherDto) {
+    const teacher = await this.prisma.teacher.findUnique({ where: { id } });
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with ID ${id} not found`);
+    }
+
+    return this.prisma.teacher.update({
+      where: { id },
+      data: updateTeacherDto,
+    });
+  }
+
+  async deleteTeacher(id: number) {
+    const teacher = await this.prisma.teacher.findUnique({ where: { id } });
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with ID ${id} not found`);
+    }
+
+    return this.prisma.teacher.delete({ where: { id } });
   }
 }

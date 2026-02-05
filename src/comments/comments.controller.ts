@@ -22,6 +22,11 @@ import { extname } from 'path';
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
+  @Get()
+  findAll() {
+    return this.commentsService.findAll();
+  }
+
   @Post()
   create(@Request() req, @Body() createCommentDto: CreateCommentDto) {
     console.log('Creating comment with data:', {

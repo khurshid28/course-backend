@@ -18,6 +18,11 @@ import { TeacherCoursesModule } from './teacher-courses/teacher-courses.module';
 import { BannerModule } from './banner/banner.module';
 import { NotificationModule } from './notification/notification.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { AdminModule } from './admin/admin.module';
+import { VideoModule } from './upload/video.module';
+import { EnrollmentModule } from './payment/enrollment.module';
+import { PromoCodeModule } from './payment/promo-code.module';
+import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
@@ -29,6 +34,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
       serveRoot: '/uploads',
     }),
     PrismaModule,
+    AdminModule,
     AuthModule,
     UserModule,
     CourseModule,
@@ -36,6 +42,9 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     CategoryModule,
     PaymentModule,
     UploadModule,
+    VideoModule,
+    EnrollmentModule,
+    PromoCodeModule,
     SectionsModule,
     TestsModule,
     FaqsModule,
@@ -44,6 +53,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     BannerModule,
     NotificationModule,
     SchedulerModule,
+    NewsModule,
   ],
 })
 export class AppModule {}

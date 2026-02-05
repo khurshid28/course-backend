@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
+import { CreateSectionDto, UpdateSectionDto } from './dto/section.dto';
 
 @Injectable()
 export class SectionsService {
@@ -104,5 +105,55 @@ export class SectionsService {
       return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  async createSection(createSectionDto: CreateSectionDto) {
+    // Check if course exists
+    const course = await this.prisma.course.findUnique({
+      where: { id: createSectionDto.courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${createSectionDto.courseId} not found`);
+    }
+
+    // Get next order number if not provided
+    let order = createSectionDto.order;
+    if (!order) {
+      const lastSection = await this.prisma.section.findFirst({
+        where: { courseId: createSectionDto.courseId },
+        orderBy: { order: 'desc' },
+      });
+      order = lastSection ? lastSection.order + 1 : 1;
+    }
+
+    return this.prisma.section.create({
+      data: {
+        ...createSectionDto,
+        order,
+        isActive: createSectionDto.isActive ?? true,
+      },
+    });
+  }
+
+  async updateSection(id: number, updateSectionDto: UpdateSectionDto) {
+    const section = await this.prisma.section.findUnique({ where: { id } });
+    if (!section) {
+      throw new NotFoundException(`Section with ID ${id} not found`);
+    }
+
+    return this.prisma.section.update({
+      where: { id },
+      data: updateSectionDto,
+    });
+  }
+
+  async deleteSection(id: number) {
+    const section = await this.prisma.section.findUnique({ where: { id } });
+    if (!section) {
+      throw new NotFoundException(`Section with ID ${id} not found`);
+    }
+
+    return this.prisma.section.delete({ where: { id } });
   }
 }

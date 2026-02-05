@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Param, UseGuards, UseInterceptors, UploadedFile, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile, ParseIntPipe } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { SectionsService } from './sections.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateSectionDto, UpdateSectionDto } from './dto/section.dto';
 
 @Controller('sections')
 @UseGuards(JwtAuthGuard)
@@ -18,6 +19,24 @@ export class SectionsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.sectionsService.findOne(+id);
+  }
+
+  @Post()
+  createSection(@Body() createSectionDto: CreateSectionDto) {
+    return this.sectionsService.createSection(createSectionDto);
+  }
+
+  @Put(':id')
+  updateSection(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSectionDto: UpdateSectionDto,
+  ) {
+    return this.sectionsService.updateSection(id, updateSectionDto);
+  }
+
+  @Delete(':id')
+  deleteSection(@Param('id', ParseIntPipe) id: number) {
+    return this.sectionsService.deleteSection(id);
   }
 
   @Post(':sectionId/upload-video')
