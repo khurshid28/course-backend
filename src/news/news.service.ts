@@ -44,9 +44,15 @@ export class NewsService {
     return news;
   }
 
-  async create(createNewsDto: CreateNewsDto) {
+  async create(createNewsDto: CreateNewsDto & { authorId: number }) {
     return this.prisma.news.create({
-      data: createNewsDto,
+      data: {
+        title: createNewsDto.title,
+        content: createNewsDto.content,
+        image: createNewsDto.image,
+        isPublished: createNewsDto.isPublished,
+        authorId: createNewsDto.authorId,
+      },
       include: {
         author: {
           select: {

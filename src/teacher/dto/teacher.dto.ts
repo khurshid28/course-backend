@@ -2,11 +2,14 @@ import { IsString, IsOptional, IsEmail, IsBoolean } from 'class-validator';
 
 export class CreateTeacherDto {
   @IsString()
-  name: string;
+  firstName: string;
+
+  @IsString()
+  lastName: string;
 
   @IsOptional()
   @IsString()
-  surname?: string;
+  phone?: string;
 
   @IsOptional()
   @IsEmail()
@@ -14,7 +17,7 @@ export class CreateTeacherDto {
 
   @IsOptional()
   @IsString()
-  phone?: string;
+  password?: string;
 
   @IsOptional()
   @IsString()
@@ -22,11 +25,7 @@ export class CreateTeacherDto {
 
   @IsOptional()
   @IsString()
-  avatar?: string;
-
-  @IsOptional()
-  @IsString()
-  speciality?: string;
+  image?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -36,11 +35,15 @@ export class CreateTeacherDto {
 export class UpdateTeacherDto {
   @IsOptional()
   @IsString()
-  name?: string;
+  firstName?: string;
 
   @IsOptional()
   @IsString()
-  surname?: string;
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 
   @IsOptional()
   @IsEmail()
@@ -48,7 +51,7 @@ export class UpdateTeacherDto {
 
   @IsOptional()
   @IsString()
-  phone?: string;
+  password?: string;
 
   @IsOptional()
   @IsString()
@@ -56,11 +59,7 @@ export class UpdateTeacherDto {
 
   @IsOptional()
   @IsString()
-  avatar?: string;
-
-  @IsOptional()
-  @IsString()
-  speciality?: string;
+  image?: string;
 
   @IsOptional()
   @IsBoolean()

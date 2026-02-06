@@ -247,6 +247,57 @@ export class PaymentService {
     return { message: 'Payment confirmed and enrolled successfully' };
   }
 
+  async getAllPayments(status?: string) {
+    const where: any = status ? { status: status as any } : {};
+    
+    return this.prisma.payment.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            surname: true,
+            phone: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            subtitle: true,
+            thumbnail: true,
+            price: true,
+          },
+        },
+        promoCode: {
+          select: {
+            code: true,
+            discountPercent: true,
+            discountAmount: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async deletePayment(id: number) {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id },
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    await this.prisma.payment.delete({
+      where: { id },
+    });
+
+    return { message: 'Payment deleted successfully' };
+  }
+
   async getPaymentHistory(userId: number) {
     return this.prisma.payment.findMany({
       where: { userId },

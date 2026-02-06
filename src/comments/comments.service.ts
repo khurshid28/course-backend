@@ -30,7 +30,6 @@ export class CommentsService {
               select: {
                 id: true,
                 name: true,
-                surname: true,
               },
             },
           },

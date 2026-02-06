@@ -34,6 +34,7 @@ export class CategoryService {
     return this.prisma.category.create({
       data: {
         ...createCategoryDto,
+        nameUz: createCategoryDto.nameUz || createCategoryDto.name,
         isActive: createCategoryDto.isActive ?? true,
       },
     });

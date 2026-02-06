@@ -7,7 +7,7 @@ export class TeacherService {
   constructor(private prisma: PrismaService) {}
 
   async getAllTeachers() {
-    return this.prisma.teacher.findMany({      
+    const teachers = await this.prisma.teacher.findMany({      
       include: {
         user: {
           select: {
@@ -22,13 +22,55 @@ export class TeacherService {
             id: true,
             categoryId: true,
             title: true,
+            _count: {
+              select: {
+                enrollments: true,
+              },
+            },
           },
         },
         _count: {
-          select: { courses: true },
+          select: { 
+            courses: true,
+            comments: true,
+            ratings: true,
+          },
         },
       },
       orderBy: { id: 'desc' },
+    });
+
+    // Calculate total students for each teacher and transform name
+    return teachers.map(teacher => {
+      const totalStudents = teacher.courses.reduce(
+        (sum, course) => sum + (course._count?.enrollments || 0),
+        0,
+      );
+      
+      // Split name into firstName and lastName
+      const nameParts = teacher.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      return {
+        id: teacher.id,
+        firstName,
+        lastName,
+        phone: teacher.phone,
+        email: teacher.email,
+        bio: teacher.bio,
+        image: teacher.avatar,
+        password: '********', // Dummy password for frontend
+        rating: teacher.rating,
+        totalRatings: teacher.totalRatings,
+        isActive: teacher.isActive,
+        createdAt: teacher.createdAt,
+        updatedAt: teacher.updatedAt,
+        totalStudents,
+        _count: teacher._count,
+        courses: teacher.courses,
+        user: teacher.user,
+      };
     });
   }
 
@@ -155,10 +197,23 @@ export class TeacherService {
   }
 
   async createTeacher(createTeacherDto: CreateTeacherDto) {
-    return this.prisma.teacher.create({
-      data: {
-        ...createTeacherDto,
+    const { firstName, lastName, image, password, ...rest } = createTeacherDto;
+    const name = `${firstName} ${lastName}`.trim();
+    
+    return this.prisma.teacher.create({      data: {
+        name,
+        avatar: image,
+        ...rest,
         isActive: createTeacherDto.isActive ?? true,
+      },
+      include: {
+        _count: {
+          select: {
+            courses: true,
+            comments: true,
+            ratings: true,
+          },
+        },
       },
     });
   }
@@ -169,9 +224,31 @@ export class TeacherService {
       throw new NotFoundException(`Teacher with ID ${id} not found`);
     }
 
+    const { firstName, lastName, image, password, ...rest } = updateTeacherDto;
+    const data: any = { ...rest };
+    
+    if (firstName || lastName) {
+      const newFirstName = firstName || teacher.name.split(' ')[0];
+      const newLastName = lastName || teacher.name.split(' ').slice(1).join(' ');
+      data.name = `${newFirstName} ${newLastName}`.trim();
+    }
+    
+    if (image !== undefined) {
+      data.avatar = image;
+    }
+
     return this.prisma.teacher.update({
       where: { id },
-      data: updateTeacherDto,
+      data,
+      include: {
+        _count: {
+          select: {
+            courses: true,
+            comments: true,
+            ratings: true,
+          },
+        },
+      },
     });
   }
 

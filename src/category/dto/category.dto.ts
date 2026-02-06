@@ -6,7 +6,11 @@ export class CreateCategoryDto {
 
   @IsOptional()
   @IsString()
-  description?: string;
+  nameUz?: string;
+
+  @IsOptional()
+  @IsString()
+  icon?: string;
 
   @IsOptional()
   @IsString()
@@ -24,7 +28,11 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   @IsString()
-  description?: string;
+  nameUz?: string;
+
+  @IsOptional()
+  @IsString()
+  icon?: string;
 
   @IsOptional()
   @IsString()

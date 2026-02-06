@@ -16,6 +16,21 @@ export class TestsController {
     private readonly pdfService: PdfService,
   ) {}
 
+  @Get()
+  findAll() {
+    return this.testsService.findAll();
+  }
+
+  @Get('course/:courseId')
+  findByCourseId(@Param('courseId') courseId: string, @Request() req) {
+    return this.testsService.findByCourseId(+courseId, req.user.id);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.testsService.findOne(+id);
+  }
+
   @Post()
   createTest(@Body() createTestDto: CreateTestDto) {
     return this.testsService.createTest(createTestDto);
@@ -29,11 +44,6 @@ export class TestsController {
   @Delete(':id')
   deleteTest(@Param('id') id: string) {
     return this.testsService.deleteTest(+id);
-  }
-
-  @Get('course/:courseId')
-  findByCourseId(@Param('courseId') courseId: string, @Request() req) {
-    return this.testsService.findByCourseId(+courseId, req.user.id);
   }
 
   // Test session - boshlash
@@ -64,11 +74,6 @@ export class TestsController {
     return this.testsService.completeTest(+sessionId, req.user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.testsService.findOne(+id);
-  }
-
   @Post('submit')
   submitTest(@Request() req, @Body() submitTestDto: SubmitTestDto) {
     return this.testsService.submitTest(req.user.id, submitTestDto);
@@ -82,6 +87,17 @@ export class TestsController {
   @Get('results/my')
   getUserTestResults(@Request() req) {
     return this.testsService.getUserTestResults(req.user.id);
+  }
+
+  // Admin endpoints
+  @Get('results/all')
+  getAllTestResults() {
+    return this.testsService.getAllTestResults();
+  }
+
+  @Get('certificates/all')
+  getAllCertificates() {
+    return this.testsService.getAllCertificates();
   }
 
   // Certificate PDF download - specific route must be before generic :certificateNo

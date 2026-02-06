@@ -59,7 +59,7 @@ export class AdminService {
       throw new UnauthorizedException('Admin account is deactivated');
     }
 
-    const payload = { sub: admin.id, login: admin.login, role: admin.role };
+    const payload = { userId: admin.id, login: admin.login, role: admin.role };
     const access_token = this.jwtService.sign(payload);
 
     const { password, ...adminData } = admin;

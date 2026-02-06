@@ -9,6 +9,58 @@ import { UpdateTestDto } from './dto/update-test.dto';
 export class TestsService {
   constructor(private prisma: PrismaService) {}
 
+  async findAll() {
+    return this.prisma.test.findMany({
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        questions: {
+          select: {
+            id: true,
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+            results: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findOne(id: number) {
+    const test = await this.prisma.test.findUnique({
+      where: { id },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        questions: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!test) {
+      throw new NotFoundException(`Test with ID ${id} not found`);
+    }
+
+    return test;
+  }
+
   async createTest(createTestDto: CreateTestDto) {
     const { questions, ...testData } = createTestDto;
 
@@ -157,23 +209,6 @@ export class TestsService {
     });
   }
 
-  async findOne(id: number) {
-    return this.prisma.test.findUnique({
-      where: { id },
-      include: {
-        questions: {
-          orderBy: { order: 'asc' },
-          select: {
-            id: true,
-            question: true,
-            options: true,
-            order: true,
-          },
-        },
-      },
-    });
-  }
-
   async submitTest(userId: number, submitTestDto: SubmitTestDto) {
     const { testId, answers } = submitTestDto;
 
@@ -303,6 +338,64 @@ export class TestsService {
         },
       },
       orderBy: { completedAt: 'desc' },
+    });
+  }
+
+  async getAllTestResults() {
+    return this.prisma.testResult.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            surname: true,
+            phone: true,
+          },
+        },
+        test: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                thumbnail: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { completedAt: 'desc' },
+    });
+  }
+
+  async getAllCertificates() {
+    return this.prisma.certificate.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            surname: true,
+            phone: true,
+          },
+        },
+        testResult: {
+          include: {
+            test: {
+              include: {
+                course: {
+                  select: {
+                    id: true,
+                    title: true,
+                    thumbnail: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { issuedAt: 'desc' },
     });
   }
 

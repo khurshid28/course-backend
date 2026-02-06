@@ -16,15 +16,37 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { userId: number }) {
+  async validate(payload: { userId?: number; sub?: number; role?: string }) {
+    // Support both userId (user/admin login) and sub (admin login)
+    const id = payload.userId || payload.sub;
+    
+    if (!id) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
+
+    // Check if this is an admin token
+    if (payload.role) {
+      // Admin token - validate in Admin table
+      const admin = await this.prisma.admin.findUnique({
+        where: { id },
+      });
+
+      if (!admin || !admin.isActive) {
+        throw new UnauthorizedException('Admin not found or inactive');
+      }
+
+      return { ...admin, isAdmin: true };
+    }
+
+    // User token - validate in User table
     const user = await this.prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { id },
     });
 
     if (!user || !user.isActive) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('User not found or inactive');
     }
 
-    return user;
+    return { ...user, isAdmin: false };
   }
 }

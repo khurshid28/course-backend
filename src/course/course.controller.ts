@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto, CreateFeedbackDto, UpdateCourseDto } from './dto/course.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { GetUser } from '../auth/get-user.decorator';
 
-@Controller('courses')
+@Controller('course')
 export class CourseController {
   constructor(private courseService: CourseService) {}
 
@@ -27,7 +27,7 @@ export class CourseController {
     return this.courseService.createCourse(createCourseDto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @UseGuards(JwtAuthGuard)
   updateCourse(
     @Param('id', ParseIntPipe) id: number,

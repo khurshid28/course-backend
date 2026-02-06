@@ -35,6 +35,9 @@ export class NewsController {
     // Admin'ning ID sini req.user dan olamiz
     const adminId = req.user?.id || req.user?.userId;
     return this.newsService.create({ ...createNewsDto, authorId: adminId });
+  }
+
+  @Put(':id')
   @UseGuards(JwtAuthGuard)
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -53,10 +56,7 @@ export class NewsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard.newsService.update(id, updateNewsDto);
-  }
-
-  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.newsService.remove(id);
   }

@@ -24,6 +24,17 @@ export class UserService {
             savedCourses: true,
           },
         },
+        enrollments: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                categoryId: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { id: 'desc' },
     });
@@ -88,13 +99,12 @@ export class UserService {
       throw new BadRequestException('Email or phone already exists');
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    // Note: User model doesn't have password field - authentication is phone-based
+    const { password, ...userData } = createUserDto;
 
     return this.prisma.user.create({
       data: {
-        ...createUserDto,
-        password: hashedPassword,
+        ...userData,
         isActive: createUserDto.isActive ?? true,
       },
       select: {

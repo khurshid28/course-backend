@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { BannerService } from './banner.service';
 import { CreateBannerDto, UpdateBannerDto } from './dto/banner.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@Controller('banners')
+@Controller('banner')
 export class BannerController {
   constructor(private readonly bannerService: BannerService) {}
 
@@ -26,6 +26,15 @@ export class BannerController {
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   async updateBanner(
+    @Param('id') id: string,
+    @Body() updateBannerDto: UpdateBannerDto,
+  ) {
+    return this.bannerService.updateBanner(+id, updateBannerDto);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  async patchBanner(
     @Param('id') id: string,
     @Body() updateBannerDto: UpdateBannerDto,
   ) {
