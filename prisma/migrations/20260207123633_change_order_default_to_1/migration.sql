@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `section` MODIFY `order` INTEGER NOT NULL DEFAULT 1;
+
+-- AlterTable
+ALTER TABLE `video` MODIFY `order` INTEGER NOT NULL DEFAULT 1;

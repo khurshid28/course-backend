@@ -6,23 +6,75 @@ import { CreateCourseDto, CreateFeedbackDto, UpdateCourseDto } from './dto/cours
 export class CourseService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllCourses(userId?: number) {
-    const courses = await this.prisma.course.findMany({
-      where: { isActive: true },
-      include: {
-        teacher: true,
-        category: true,
-        _count: {
-          select: {
-            videos: true,
-            enrollments: true,
-            feedbacks: true,
-            ratings: true,
-            sections: true,
-          },
+  async getAllCourses(
+    userId?: number,
+    page: number = 1,
+    limit: number = 10,
+    isActive?: boolean,
+    includeInactive: boolean = false,
+    includeVideos: boolean = false,
+    includeEnrollments: boolean = false,
+  ) {
+    // Build where clause
+    const where: any = {};
+    
+    // If includeInactive is false (for mobile users), only show active courses
+    // If includeInactive is true (for admin), show all courses or filter by isActive
+    if (!includeInactive) {
+      where.isActive = true;
+    } else if (isActive !== undefined) {
+      where.isActive = isActive;
+    }
+
+    // Get total count for pagination
+    const total = await this.prisma.course.count({ where });
+    const totalPages = Math.ceil(total / limit);
+    const skip = (page - 1) * limit;
+
+    // Build include object dynamically
+    const include: any = {
+      teacher: true,
+      category: true,
+      _count: {
+        select: {
+          videos: true,
+          enrollments: true,
+          feedbacks: true,
+          ratings: true,
+          sections: true,
         },
       },
+    };
+
+    // Add videos if requested
+    if (includeVideos) {
+      include.videos = {
+        orderBy: { id: 'asc' },
+      };
+    }
+
+    // Add enrollments if requested
+    if (includeEnrollments) {
+      include.enrollments = {
+        where: { isActive: true },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              surname: true,
+            },
+          },
+        },
+      };
+    }
+
+    const courses = await this.prisma.course.findMany({
+      where,
+      include,
       orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
     });
 
     // If user is logged in, add enrollment and saved status
@@ -40,14 +92,28 @@ export class CourseService {
       const enrolledIds = new Set(enrolledCourses.map((e) => e.courseId));
       const savedIds = new Set(savedCourses.map((s) => s.courseId));
 
-      return courses.map((course) => ({
+      const coursesWithStatus = courses.map((course) => ({
         ...course,
         isEnrolled: enrolledIds.has(course.id),
         isSaved: savedIds.has(course.id),
       }));
+
+      return {
+        courses: coursesWithStatus,
+        total,
+        page,
+        limit,
+        totalPages,
+      };
     }
 
-    return courses;
+    return {
+      courses,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async getCourseById(id: number, userId?: number) {

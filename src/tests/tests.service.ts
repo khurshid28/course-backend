@@ -349,18 +349,17 @@ export class TestsService {
             id: true,
             firstName: true,
             surname: true,
+            fullName: true,
             phone: true,
+            avatar: true,
           },
         },
         test: {
-          include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
-                thumbnail: true,
-              },
-            },
+          select: {
+            id: true,
+            title: true,
+            passingScore: true,
+            duration: true,
           },
         },
       },
@@ -376,7 +375,9 @@ export class TestsService {
             id: true,
             firstName: true,
             surname: true,
+            fullName: true,
             phone: true,
+            avatar: true,
           },
         },
         testResult: {

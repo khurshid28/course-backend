@@ -16,7 +16,7 @@ export class SectionsService {
       orderBy: { order: 'asc' },
       include: {
         videos: {
-          orderBy: { id: 'asc' },
+          orderBy: { order: 'asc' },
         },
       },
     });
@@ -27,7 +27,7 @@ export class SectionsService {
       where: { id },
       include: {
         videos: {
-          orderBy: { id: 'asc' },
+          orderBy: { order: 'asc' },
         },
       },
     });

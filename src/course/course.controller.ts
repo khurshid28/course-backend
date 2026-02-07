@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, ParseIntPipe, Req, Query } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { CreateCourseDto, CreateFeedbackDto, UpdateCourseDto } from './dto/course.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -11,8 +11,24 @@ export class CourseController {
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  getAllCourses(@GetUser('id') userId?: number) {
-    return this.courseService.getAllCourses(userId);
+  getAllCourses(
+    @GetUser('id') userId?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('isActive') isActive?: string,
+    @Query('includeInactive') includeInactive?: string,
+    @Query('includeVideos') includeVideos?: string,
+    @Query('includeEnrollments') includeEnrollments?: string,
+  ) {
+    return this.courseService.getAllCourses(
+      userId,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 10,
+      isActive !== undefined ? isActive === 'true' : undefined,
+      includeInactive === 'true',
+      includeVideos === 'true',
+      includeEnrollments === 'true',
+    );
   }
 
   @UseGuards(OptionalJwtAuthGuard)

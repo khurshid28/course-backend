@@ -6,7 +6,7 @@ export class EnrollmentService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.enrollment.findMany({
+    const enrollments = await this.prisma.enrollment.findMany({
       include: {
         user: {
           select: {
@@ -21,15 +21,57 @@ export class EnrollmentService {
             id: true,
             title: true,
             thumbnail: true,
+            banners: {
+              where: { isActive: true },
+              orderBy: { order: 'asc' },
+              take: 1,
+              select: {
+                id: true,
+                image: true,
+                title: true,
+              },
+            },
           },
         },
       },
       orderBy: { enrolledAt: 'desc' },
     });
+
+    // Fetch payment information for each enrollment
+    const enrollmentsWithPayment = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const payment = await this.prisma.payment.findFirst({
+          where: {
+            userId: enrollment.userId,
+            courseId: enrollment.courseId,
+            status: 'SUCCESS',
+          },
+          orderBy: {
+            paymentDate: 'desc',
+          },
+          include: {
+            promoCode: {
+              select: {
+                id: true,
+                code: true,
+                discount: true,
+              },
+            },
+          },
+        });
+
+        return {
+          ...enrollment,
+          payment: payment || null,
+        };
+      }),
+    );
+
+    return enrollmentsWithPayment;
   }
 
   async findByStatus(isActive: boolean) {
-    return this.prisma.enrollment.findMany({
+    const enrollments = await this.prisma.enrollment.findMany({
       where: { isActive },
       include: {
         user: {
@@ -45,11 +87,53 @@ export class EnrollmentService {
             id: true,
             title: true,
             thumbnail: true,
+            banners: {
+              where: { isActive: true },
+              orderBy: { order: 'asc' },
+              take: 1,
+              select: {
+                id: true,
+                image: true,
+                title: true,
+              },
+            },
           },
         },
       },
       orderBy: { enrolledAt: 'desc' },
     });
+
+    // Fetch payment information for each enrollment
+    const enrollmentsWithPayment = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const payment = await this.prisma.payment.findFirst({
+          where: {
+            userId: enrollment.userId,
+            courseId: enrollment.courseId,
+            status: 'SUCCESS',
+          },
+          orderBy: {
+            paymentDate: 'desc',
+          },
+          include: {
+            promoCode: {
+              select: {
+                id: true,
+                code: true,
+                discount: true,
+              },
+            },
+          },
+        });
+
+        return {
+          ...enrollment,
+          payment: payment || null,
+        };
+      }),
+    );
+
+    return enrollmentsWithPayment;
   }
 
   async findOne(id: number) {

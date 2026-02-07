@@ -233,7 +233,7 @@ model Section {
   courseId    Int
   title       String    @db.VarChar(255)
   description String?   @db.Text
-  order       Int       @default(0)
+  order       Int       @default(1)
   isFree      Boolean   @default(false)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
@@ -258,7 +258,7 @@ model Video {
   thumbnail   String?   @db.VarChar(500)
   duration    Int?      // in seconds
   size        BigInt?   // in bytes
-  order       Int       @default(0)
+  order       Int       @default(1)
   isFree      Boolean   @default(false)
   screenshots String?   @db.Text // JSON array of screenshot URLs
   isActive    Boolean   @default(true)
