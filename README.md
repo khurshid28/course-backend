@@ -137,3 +137,66 @@ npm run prisma:studio
 ```
 
 http://localhost:5555 da ochiladi.
+
+## Admin Yaratish / Creating Admin
+
+Tizimda admin yaratish uchun maxsus script mavjud. Script interaktiv bo'lib, login, parol, telefon va rol kabi ma'lumotlarni so'raydi.
+
+### Admin yaratish buyrug'i:
+```bash
+npm run create-admin
+```
+
+### Script ishlashi:
+1. Login kiritish (noyob bo'lishi kerak)
+2. Telefon raqam kiritish (+998XXXXXXXXX formatida, noyob)
+3. Parol kiritish
+4. To'liq ism kiritish (ixtiyoriy)
+5. Rol tanlash:
+   - `1` - SUPER_ADMIN (Barcha huquqlar)
+   - `2` - ADMIN (Administrator)
+   - `3` - MODERATOR (Moderator)
+
+### Misol:
+```bash
+$ npm run create-admin
+
+🔧 Admin Yaratish / Create Admin
+
+═══════════════════════════════════════
+
+Login kiriting / Enter login: admin1
+Telefon raqam kiriting (+998XXXXXXXXX) / Enter phone number (+998XXXXXXXXX): +998901234567
+Parol kiriting / Enter password: mypassword123
+To'liq ism kiriting / Enter full name (optional): John Doe
+
+Rol tanlang / Choose role:
+1. SUPER_ADMIN (Barcha huquqlar / All permissions)
+2. ADMIN (Administrator)
+3. MODERATOR (Moderator)
+Raqam kiriting / Enter number (1-3): 2
+
+⏳ Admin yaratilmoqda / Creating admin...
+
+✅ Admin muvaffaqiyatli yaratildi! / Admin created successfully!
+
+═══════════════════════════════════════
+ID: 1
+Login: admin1
+Phone: +998901234567
+Full Name: John Doe
+Role: ADMIN
+Status: Active
+═══════════════════════════════════════
+```
+
+### Root Admin
+Agar root admin (SUPER_ADMIN) yaratish kerak bo'lsa, quyidagi buyruq bilan ham yaratishingiz mumkin:
+```bash
+npx ts-node create-root-admin.ts
+```
+Bu script default qiymatlar bilan root admin yaratadi:
+- Login: `root`
+- Phone: `+998901234567`
+- Password: `root123`
+- Role: `SUPER_ADMIN`

@@ -15,7 +15,8 @@
     "prisma:studio": "prisma studio",
     "seed": "ts-node prisma/seed.ts",
     "seed:notifications": "ts-node prisma/seed-notifications.ts",
-    "upload-videos": "ts-node prisma/upload-videos.ts"
+    "upload-videos": "ts-node prisma/upload-videos.ts",
+    "create-admin": "ts-node create-admin.ts"
   },
   "keywords": [],
   "author": "",
