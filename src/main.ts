@@ -13,10 +13,19 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   
   // Enable CORS for web and mobile applications
-  // Using environment variable for allowed origins or allowing all if not specified
+  // Default allowed origins for development (Vite, Create React App, Angular CLI)
+  const defaultAllowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173', // Vite default
+    'http://localhost:5174', // Vite alternative
+    'http://localhost:4200', // Angular CLI default
+  ];
+  
   const allowedOrigins = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-    : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:4200'];
+    : defaultAllowedOrigins;
+  
+  const isDevelopment = process.env.NODE_ENV !== 'production';
   
   app.enableCors({
     origin: (origin, callback) => {
@@ -25,9 +34,17 @@ async function bootstrap() {
         return callback(null, true);
       }
       
-      // In development, allow all localhost origins
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        return callback(null, true);
+      // In development, allow all localhost/127.0.0.1 origins
+      if (isDevelopment) {
+        try {
+          const url = new URL(origin);
+          if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+            return callback(null, true);
+          }
+        } catch (error) {
+          // Invalid URL, reject it
+          return callback(new Error('Not allowed by CORS'));
+        }
       }
       
       // Check if origin is in allowed list
@@ -35,9 +52,8 @@ async function bootstrap() {
         return callback(null, true);
       }
       
-      // For production, you may want to reject unknown origins
-      // For now, allowing all to fix immediate connectivity issues
-      return callback(null, true);
+      // Reject unauthorized origins
+      callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
