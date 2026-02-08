@@ -31,14 +31,18 @@ async function bootstrap() {
       ];
       
       // Add production origins from environment variable if configured
-      const productionOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+      const productionOrigins = process.env.ALLOWED_ORIGINS
+        ?.split(',')
+        .map(o => o.trim())
+        .filter(o => o.length > 0) || [];
       const allAllowedOrigins = [...allowedOrigins, ...productionOrigins];
       
       if (allAllowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       
-      // Reject other origins
+      // Reject other origins with logging for debugging
+      console.warn(`CORS: Rejected origin: ${origin}`);
       return callback(new Error('Not allowed by CORS'), false);
     },
     credentials: true,
