@@ -21,11 +21,29 @@ async function bootstrap() {
     'http://localhost:4200', // Angular CLI default
   ];
   
-  const allowedOrigins = process.env.ALLOWED_ORIGINS 
-    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-    : defaultAllowedOrigins;
+  // Parse and validate ALLOWED_ORIGINS from environment
+  let allowedOrigins = defaultAllowedOrigins;
+  if (process.env.ALLOWED_ORIGINS) {
+    allowedOrigins = process.env.ALLOWED_ORIGINS
+      .split(',')
+      .map(origin => origin.trim())
+      .filter(origin => {
+        try {
+          new URL(origin);
+          return true;
+        } catch {
+          console.warn(`Invalid origin in ALLOWED_ORIGINS: ${origin}`);
+          return false;
+        }
+      });
+  }
   
   const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  // Normalize origin URL by removing trailing slash
+  const normalizeOrigin = (origin: string): string => {
+    return origin.endsWith('/') ? origin.slice(0, -1) : origin;
+  };
   
   app.enableCors({
     origin: (origin, callback) => {
@@ -47,8 +65,9 @@ async function bootstrap() {
         }
       }
       
-      // Check if origin is in allowed list
-      if (allowedOrigins.includes(origin)) {
+      // Normalize and check if origin is in allowed list
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (allowedOrigins.some(allowed => normalizeOrigin(allowed) === normalizedOrigin)) {
         return callback(null, true);
       }
       
@@ -57,7 +76,7 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     exposedHeaders: ['Authorization'],
     preflightContinue: false,
     optionsSuccessStatus: 204,
