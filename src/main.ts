@@ -27,21 +27,20 @@ async function bootstrap() {
   ];
   
   // Parse and validate ALLOWED_ORIGINS from environment
-  let allowedOrigins = defaultAllowedOrigins;
-  if (process.env.ALLOWED_ORIGINS) {
-    allowedOrigins = process.env.ALLOWED_ORIGINS
-      .split(',')
-      .map(origin => origin.trim())
-      .filter(origin => {
-        try {
-          new URL(origin);
-          return true;
-        } catch {
-          console.warn(`Invalid origin in ALLOWED_ORIGINS: ${origin}`);
-          return false;
-        }
-      });
-  }
+  const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS
+        .split(',')
+        .map(origin => origin.trim())
+        .filter(origin => {
+          try {
+            new URL(origin);
+            return true;
+          } catch {
+            console.warn(`Invalid origin in ALLOWED_ORIGINS: ${origin}`);
+            return false;
+          }
+        })
+    : defaultAllowedOrigins;
   
   // Normalize allowed origins once during initialization for better performance
   const normalizedAllowedOrigins = allowedOrigins.map(normalizeOrigin);
@@ -56,6 +55,7 @@ async function bootstrap() {
       }
       
       // In development, allow all localhost/127.0.0.1 origins
+      // Note: This allows any port for development convenience
       if (isDevelopment) {
         try {
           const url = new URL(origin);
@@ -63,8 +63,8 @@ async function bootstrap() {
             return callback(null, true);
           }
         } catch (error) {
-          // Invalid URL, reject it
-          return callback(new Error('Not allowed by CORS'));
+          // Invalid URL format, reject it
+          return callback(new Error('Invalid origin URL format'));
         }
         // Fall through to check allowedOrigins for non-localhost origins in development
       }
