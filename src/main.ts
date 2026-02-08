@@ -19,11 +19,12 @@ async function bootstrap() {
  
   
   app.enableCors({
-    origin: ["http://127.0.0.1:8080" ,"http://localhost:8080" , "http://89.39.95.175:8080", "*"],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  });
+  origin: "*",               // barcha originlarga ruxsat
+  methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'], // barcha request turlari
+  allowedHeaders: ['*'],     // barcha headerlar ruxsat
+  credentials: true          // agar cookie / session ishlatmoqchi bo‘lsang, true
+});
+
   
   app.useGlobalPipes(
     new ValidationPipe({
