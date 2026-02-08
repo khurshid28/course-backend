@@ -18,12 +18,12 @@ async function bootstrap() {
   // Default allowed origins for development (Vite, Create React App, Angular CLI, React)
  
   
-  app.enableCors({
-  origin: "*",               // barcha originlarga ruxsat
-  methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'], // barcha request turlari
-  allowedHeaders: ['*'],     // barcha headerlar ruxsat
-  credentials: true          // agar cookie / session ishlatmoqchi bo‘lsang, true
-});
+//   app.enableCors({
+//   origin: "*",               // barcha originlarga ruxsat
+//   methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'], // barcha request turlari
+//   allowedHeaders: ['*'],     // barcha headerlar ruxsat
+//   credentials: true          // agar cookie / session ishlatmoqchi bo‘lsang, true
+// });
 
   
   app.useGlobalPipes(
