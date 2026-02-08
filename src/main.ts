@@ -7,6 +7,11 @@ import { AppModule } from './app.module';
   return this.toString();
 };
 
+// Utility function to normalize origin URLs by removing trailing slash
+const normalizeOrigin = (origin: string): string => {
+  return origin.endsWith('/') ? origin.slice(0, -1) : origin;
+};
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
@@ -38,12 +43,10 @@ async function bootstrap() {
       });
   }
   
-  const isDevelopment = process.env.NODE_ENV !== 'production';
+  // Normalize allowed origins once during initialization for better performance
+  const normalizedAllowedOrigins = allowedOrigins.map(normalizeOrigin);
   
-  // Normalize origin URL by removing trailing slash
-  const normalizeOrigin = (origin: string): string => {
-    return origin.endsWith('/') ? origin.slice(0, -1) : origin;
-  };
+  const isDevelopment = process.env.NODE_ENV !== 'production';
   
   app.enableCors({
     origin: (origin, callback) => {
@@ -63,11 +66,12 @@ async function bootstrap() {
           // Invalid URL, reject it
           return callback(new Error('Not allowed by CORS'));
         }
+        // Fall through to check allowedOrigins for non-localhost origins in development
       }
       
       // Normalize and check if origin is in allowed list
       const normalizedOrigin = normalizeOrigin(origin);
-      if (allowedOrigins.some(allowed => normalizeOrigin(allowed) === normalizedOrigin)) {
+      if (normalizedAllowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
       
