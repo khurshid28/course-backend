@@ -54,7 +54,8 @@ export class EnrollmentService {
               select: {
                 id: true,
                 code: true,
-                discount: true,
+                discountPercent: true,
+                discountAmount: true,
               },
             },
           },
@@ -120,7 +121,8 @@ export class EnrollmentService {
               select: {
                 id: true,
                 code: true,
-                discount: true,
+                discountPercent: true,
+                discountAmount: true,
               },
             },
           },
