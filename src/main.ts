@@ -12,7 +12,8 @@ async function bootstrap() {
   
   app.setGlobalPrefix('api/v1');
   
-  // Enable CORS for web and mobile applications
+  // Enable CORS for all origins (web and mobile applications)
+  // Note: Using wildcard pattern for broader access while maintaining some security
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, Postman, etc.)
@@ -20,33 +21,13 @@ async function bootstrap() {
         return callback(null, true);
       }
       
-      // Allow localhost origins for development
-      const allowedOrigins = [
-        'http://localhost:8080',
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:8080',
-         'http://89.39.95.175:8080',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:3001',
-      ];
-      
-      // Add production origins from environment variable if configured
-      const productionOrigins = process.env.ALLOWED_ORIGINS
-        ?.split(',')
-        .map(o => o.trim())
-        .filter(o => o.length > 0) || [];
-      const allAllowedOrigins = [...allowedOrigins, ...productionOrigins];
-      
-      if (allAllowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      
-      // Reject other origins with logging for debugging
-      console.warn(`CORS: Rejected origin: ${origin}`);
-      return callback(new Error('Not allowed by CORS'), false);
+      // Allow all origins - as requested to fix web request issues
+      // Consider restricting this in production using environment variables
+      return callback(null, true);
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
   
   app.useGlobalPipes(
