@@ -12,8 +12,31 @@ async function bootstrap() {
   
   app.setGlobalPrefix('api/v1');
   
+  // Enable CORS for web and mobile applications
   app.enableCors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, postman, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // Allow localhost origins for development
+      const allowedOrigins = [
+        'http://localhost:8080',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:8080',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001',
+      ];
+      
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Allow all other origins (for mobile apps and production)
+      return callback(null, true);
+    },
     credentials: true,
   });
   
