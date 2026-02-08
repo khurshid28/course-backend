@@ -15,7 +15,7 @@ async function bootstrap() {
   // Enable CORS for web and mobile applications
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, postman, etc.)
+      // Allow requests with no origin (mobile apps, curl, Postman, etc.)
       if (!origin) {
         return callback(null, true);
       }
@@ -30,12 +30,16 @@ async function bootstrap() {
         'http://127.0.0.1:3001',
       ];
       
-      if (allowedOrigins.includes(origin)) {
+      // Add production origins from environment variable if configured
+      const productionOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+      const allAllowedOrigins = [...allowedOrigins, ...productionOrigins];
+      
+      if (allAllowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       
-      // Allow all other origins (for mobile apps and production)
-      return callback(null, true);
+      // Reject other origins
+      return callback(new Error('Not allowed by CORS'), false);
     },
     credentials: true,
   });

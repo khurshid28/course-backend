@@ -29,6 +29,9 @@ CREATE DATABASE course_platform;
 DATABASE_URL="mysql://root:password@localhost:3306/course_platform"
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 PORT=3000
+
+# CORS - Production originlarini qo'shish uchun (ixtiyoriy)
+# ALLOWED_ORIGINS=https://myapp.com,https://www.myapp.com
 ```
 
 ### 4. Prisma migration va generate
@@ -65,7 +68,13 @@ Backend serveri web (brauzer) va mobil ilovalardan so'rovlarni qabul qilish uchu
 - Mobil native ilovalar (Android/iOS) to'g'ridan-to'g'ri API ga murojaat qilishi mumkin
 - Mobil brauzer va WebView'lar uchun ham CORS qo'llab-quvvatlanadi
 
-**Eslatma:** Production muhitida faqat ishonchli originlarni qo'shish tavsiya etiladi.
+### Production uchun:
+Production muhitida qo'shimcha web originlarini qo'shish uchun `.env` faylida `ALLOWED_ORIGINS` environment variable'ini sozlang:
+```env
+ALLOWED_ORIGINS=https://myapp.com,https://www.myapp.com
+```
+
+**Muhim:** Mobil native ilovalar (Origin header yubormaydigan) har doim ruxsat etiladi. Browser-based ilovalar faqat ro'yxatdagi originlardan murojaat qilishi mumkin.
 
 ## API Endpoints
 
