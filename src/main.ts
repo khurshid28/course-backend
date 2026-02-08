@@ -13,18 +13,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   
   // Enable CORS for all origins (web and mobile applications)
-  // Note: Using wildcard pattern for broader access while maintaining some security
+  // Using true to allow all origins and simplify configuration
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman, etc.)
-      if (!origin) {
-        return callback(null, true);
-      }
-      
-      // Allow all origins - as requested to fix web request issues
-      // Consider restricting this in production using environment variables
-      return callback(null, true);
-    },
+    origin: true, // Allow all origins
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
