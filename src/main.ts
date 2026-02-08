@@ -26,6 +26,7 @@ async function bootstrap() {
         'http://localhost:3000',
         'http://localhost:3001',
         'http://127.0.0.1:8080',
+         'http://89.39.95.175:8080',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:3001',
       ];
