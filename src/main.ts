@@ -7,10 +7,7 @@ import { AppModule } from './app.module';
   return this.toString();
 };
 
-// Utility function to normalize origin URLs by removing trailing slash
-const normalizeOrigin = (origin: string): string => {
-  return origin.endsWith('/') ? origin.slice(0, -1) : origin;
-};
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
