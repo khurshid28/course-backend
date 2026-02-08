@@ -49,6 +49,24 @@ npm run start:prod
 
 Server http://localhost:3000 da ishga tushadi.
 
+## CORS Konfiguratsiyasi
+
+Backend serveri web (brauzer) va mobil ilovalardan so'rovlarni qabul qilish uchun CORS (Cross-Origin Resource Sharing) sozlangan:
+
+### Ruxsat berilgan web originlar:
+- `http://localhost:8080` - Asosiy frontend ilovasi
+- `http://localhost:3000` - Alternative development port
+- `http://localhost:3001` - Additional development port
+- `http://127.0.0.1:8080` - IPv4 localhost
+- `http://127.0.0.1:3000` - IPv4 localhost
+- `http://127.0.0.1:3001` - IPv4 localhost
+
+### Mobil ilovalar:
+- Mobil native ilovalar (Android/iOS) to'g'ridan-to'g'ri API ga murojaat qilishi mumkin
+- Mobil brauzer va WebView'lar uchun ham CORS qo'llab-quvvatlanadi
+
+**Eslatma:** Production muhitida faqat ishonchli originlarni qo'shish tavsiya etiladi.
+
 ## API Endpoints
 
 ### Authentication
