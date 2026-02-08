@@ -18,12 +18,13 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   
   // Enable CORS for web and mobile applications
-  // Default allowed origins for development (Vite, Create React App, Angular CLI)
+  // Default allowed origins for development (Vite, Create React App, Angular CLI, React)
   const defaultAllowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173', // Vite default
     'http://localhost:5174', // Vite alternative
     'http://localhost:4200', // Angular CLI default
+    'http://localhost:8080', // React web application
   ];
   
   // Parse and validate ALLOWED_ORIGINS from environment
