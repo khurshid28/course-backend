@@ -60,6 +60,7 @@ async function createAdmin() {
     }
 
     const fullName = await question('To\'liq ism kiriting / Enter full name (optional): ');
+    const trimmedFullName = fullName.trim();
 
     console.log('\nRol tanlang / Choose role:');
     console.log('1. SUPER_ADMIN (Barcha huquqlar / All permissions)');
@@ -85,7 +86,7 @@ async function createAdmin() {
 
     // Hash password
     console.log('\n⏳ Admin yaratilmoqda / Creating admin...');
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
     // Create admin
     const admin = await prisma.admin.create({
@@ -93,7 +94,7 @@ async function createAdmin() {
         login: login.trim(),
         phone: phone.trim(),
         password: hashedPassword,
-        fullName: fullName.trim() || undefined,
+        fullName: trimmedFullName ? trimmedFullName : undefined,
         role: role,
         isActive: true,
       },
